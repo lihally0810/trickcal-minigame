@@ -493,6 +493,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleDragStart(e) {
         if (!gameActive || isPaused || isResetting) return;
         
+        // 드래그/클릭 시작 시점에 모든 셀의 뷰포트 절대 픽셀 좌표를 최신으로 1회 갱신!
+        // 이로써 화면 해상도/배율 변화, 스크롤 등으로 인한 기하 픽셀 좌표 어긋남을 완벽하게 예방합니다.
+        cacheCellCoords();
+        
         // 공명 아이템 단일 클릭 모드 (pointer-events: none 방어용 직접 좌표 연산)
         if (isResonanceMode) {
             for (let r = 0; r < ROWS; r++) {
@@ -501,7 +505,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     const cell = board[r][c];
                     if (cell.type === 'empty') continue;
                     
-                    const rect = cell.element.getBoundingClientRect();
+                    const rect = cell.rect;
+                    if (!rect) continue;
                     if (e.clientX >= rect.left && e.clientX <= rect.right &&
                         e.clientY >= rect.top && e.clientY <= rect.bottom) {
                         applyResonanceItem(cell);

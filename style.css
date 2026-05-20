@@ -470,6 +470,7 @@ body {
     transition: opacity 0.3s ease;
     border-radius: 25px; /* app-container의 border-radius 테두리에 맞춤 */
 }
+.modal-overlay.active { display: flex; opacity: 1; }
 .modal-content {
     background: #ffffff;
     border: 5px solid var(--color-primary-light);

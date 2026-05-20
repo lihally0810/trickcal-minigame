@@ -805,9 +805,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================================
     function createExplosionParticles(cell) {
         const rect = cell.element.getBoundingClientRect();
-        const containerRect = gameBoard.getBoundingClientRect();
-        const centerX = rect.left - containerRect.left + rect.width / 2;
-        const centerY = rect.top - containerRect.top + rect.height / 2;
+        const containerRect = boardContainer.getBoundingClientRect();
+        const centerX = (rect.left - containerRect.left + rect.width / 2) / currentScale;
+        const centerY = (rect.top - containerRect.top + rect.height / 2) / currentScale;
 
         const particleCount = 8;
         const colors = ['#ffd2e5', '#ff8ebb', '#ff4d4d', '#f1c40f', '#4cd964', '#3fc5f0', '#9b59b6'];

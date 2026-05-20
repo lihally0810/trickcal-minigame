@@ -128,6 +128,13 @@ class SoundManager {
 const soundManager = new SoundManager();
 
 document.addEventListener('DOMContentLoaded', () => {
+    // 모바일 웹 핀치 줌 및 강제 뷰포트 밀림 방어
+    document.addEventListener('touchmove', (e) => {
+        if (e.touches.length > 1) {
+            e.preventDefault(); // 다중 터치 핀치 줌 강제 차단
+        }
+    }, { passive: false });
+
     // 사용자 기획 의도: 총 135칸 (9 * 15) -> 전부 없앴을 때 정확히 135점 달성!
     const ROWS = 9;
     const COLS = 15;
@@ -253,11 +260,20 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(cacheCellCoords);
     }
     
+    // 모바일 브라우저 가로회전/주소창 갱신 지연 버그 극복을 위한 2중 강제 보정 리사이즈 핸들러
+    function handleResizeEvent() {
+        resizeGame();
+        // 100ms 뒤 모바일 브라우저 뷰포트 변경 완료 시점에 2차 보정
+        setTimeout(resizeGame, 100);
+        // 300ms 뒤 마지막 안정화 시점에 3차 최종 보정 (완벽 피팅 보장)
+        setTimeout(resizeGame, 300);
+    }
+    
     // 리사이즈 및 모바일 화면 회전 이벤트 등록 및 즉시 실행
-    window.addEventListener('resize', resizeGame);
-    window.addEventListener('orientationchange', resizeGame);
-    window.addEventListener('load', resizeGame);
-    resizeGame();
+    window.addEventListener('resize', handleResizeEvent);
+    window.addEventListener('orientationchange', handleResizeEvent);
+    window.addEventListener('load', handleResizeEvent);
+    handleResizeEvent();
 
     // ==========================================================================
     // 게임 라이프사이클 및 타이머 루프

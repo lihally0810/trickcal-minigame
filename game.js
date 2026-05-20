@@ -9,7 +9,7 @@ class SoundManager {
     constructor() {
         this.audioCtx = null;
         this.bgmElement = document.getElementById('bgm-audio');
-        this.bgmVolume = 0.5;
+        this.bgmVolume = 0.3;
         this.sfxVolume = 0.7;
         this._initialized = false;
     }

@@ -228,9 +228,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================================
     // 반응형 스케일핏(Scale Fit) 조절 로직 (모바일/PC 모두 완벽 피팅)
     // ==========================================================================
-    // 실제 모바일 화면에 맞춰 동적 1vh 높이의 픽셀 단위를 계산하여 브라우저에 매핑
+    // 실제 모바일 화면에 맞춰 동적 1vh 높이의 픽셀 단위를 계산하여 브라우저에 매핑 (Visual Viewport API 우선 활용)
     function updateVh() {
-        const vh = window.innerHeight * 0.01;
+        const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+        const vh = viewportHeight * 0.01;
         document.documentElement.style.setProperty('--vh', `${vh}px`);
     }
 
@@ -243,8 +244,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const targetWidth = 1024;
         const targetHeight = 640;
         
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
+        // Visual Viewport API가 있으면 실제 눈에 보이는 순수 영역 기준 계산, 없으면 innerWidth/Height 사용
+        const windowWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
+        const windowHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         
         // 화면 해상도 비율에 맞추어 스케일링 비율 결정
         const scaleX = windowWidth / targetWidth;
@@ -273,6 +275,13 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', handleResizeEvent);
     window.addEventListener('orientationchange', handleResizeEvent);
     window.addEventListener('load', handleResizeEvent);
+    
+    // Visual Viewport 변화 이벤트 추가 바인딩 (크롬 등 주소창/소프트바 유동 변화 실시간 검출)
+    if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', handleResizeEvent);
+        window.visualViewport.addEventListener('scroll', handleResizeEvent);
+    }
+    
     handleResizeEvent();
 
     // ==========================================================================

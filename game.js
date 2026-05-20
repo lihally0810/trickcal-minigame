@@ -221,8 +221,17 @@ document.addEventListener('DOMContentLoaded', () => {
     // ==========================================================================
     // 반응형 스케일핏(Scale Fit) 조절 로직 (모바일/PC 모두 완벽 피팅)
     // ==========================================================================
+    // 실제 모바일 화면에 맞춰 동적 1vh 높이의 픽셀 단위를 계산하여 브라우저에 매핑
+    function updateVh() {
+        const vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+
     function resizeGame() {
         if (!appContainer) return;
+        
+        // 가용한 실시간 높이에 맞춰 vh 변수 주입
+        updateVh();
         
         const targetWidth = 1024;
         const targetHeight = 640;
@@ -244,8 +253,9 @@ document.addEventListener('DOMContentLoaded', () => {
         requestAnimationFrame(cacheCellCoords);
     }
     
-    // 리사이즈 이벤트 등록 및 즉시 실행
+    // 리사이즈 및 모바일 화면 회전 이벤트 등록 및 즉시 실행
     window.addEventListener('resize', resizeGame);
+    window.addEventListener('orientationchange', resizeGame);
     window.addEventListener('load', resizeGame);
     resizeGame();
 

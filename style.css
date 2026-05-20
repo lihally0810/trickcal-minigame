@@ -42,14 +42,21 @@
     -webkit-tap-highlight-color: transparent; /* 모바일 터치 하이라이트 제거 */
 }
 
+html, body {
+    height: 100%;
+    /* 모바일 브라우저 가용 영역 높이를 JS를 통해 유동적으로 받아와 대입 (주소창 잘림 극복) */
+    height: calc(var(--vh, 1vh) * 100);
+    width: 100%;
+    overflow: hidden;
+    position: fixed; /* 모바일 웹 바운싱 효과 및 원치 않는 강제 스크롤 원천 차단 */
+    top: 0;
+    left: 0;
+}
+
 body {
     font-family: var(--font-family);
     background: radial-gradient(circle at 50% 50%, #fff7fb 0%, #ede6f5 100%);
     color: #2c3e50;
-    min-height: 100vh;
-    width: 100vw;
-    position: relative;
-    overflow: hidden;
 }
 
 /* 3. 앱 레이아웃 컨테이너 */

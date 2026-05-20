@@ -157,6 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let comboTimeRemainingMs = 0;
     let lastFrameTime = 0;
     let animationFrameId = null;
+    let lastTimerUpdateMs = 0; // 메인 타이머 UI 갱신 간격 제어용 변수
 
     let gameActive = false;
     let isPaused = false;
@@ -239,6 +240,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // 화면에 맞게 조정 (중앙 정렬 상태 유지하며 크기 변경)
         appContainer.style.transform = `translate(-50%, -50%) scale(${scale})`;
+        
+        // 스케일 변화가 렌더링에 반영된 후 정확한 절대 픽셀 좌표를 재계산하여 캐싱
+        requestAnimationFrame(cacheCellCoords);
     }
     
     // 리사이즈 이벤트 등록 및 즉시 실행
@@ -355,7 +359,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 stopGame('timeout');
                 return;
             }
-            updateTimerUI();
+            
+            // 타이머 UI는 50ms (초당 20회) 주기로만 업데이트하여 레이아웃 연산 비용 절감
+            if (currentTime - lastTimerUpdateMs >= 50) {
+                updateTimerUI();
+                lastTimerUpdateMs = currentTime;
+            }
 
             // 콤보 타이머 업데이트
             if (comboTimeRemainingMs > 0) {
@@ -422,6 +431,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // 혹시 데드락이면 바로 재생성
         if (!hasAvailableMoves()) {
             createBoard();
+        } else {
+            // 보드가 완성되었을 때만 기하 픽셀 좌표 1회 캐싱
+            cacheCellCoords();
         }
     }
 
@@ -436,6 +448,19 @@ document.addEventListener('DOMContentLoaded', () => {
             boardLoadingOverlay.style.display = 'none';
             isResetting = false;
         }, 1200);
+    }
+
+    // 셀 절대 좌표 캐싱 진행 (매 마우스 무브마다 getBoundingClientRect를 강제해 렉을 유발하는 Layout Thrashing 방지)
+    function cacheCellCoords() {
+        if (!board || board.length === 0) return;
+        for (let r = 0; r < ROWS; r++) {
+            for (let c = 0; c < COLS; c++) {
+                const cell = board[r][c];
+                if (cell && cell.element && cell.type !== 'empty') {
+                    cell.rect = cell.element.getBoundingClientRect();
+                }
+            }
+        }
     }
 
     // ==========================================================================
@@ -548,7 +573,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (cell.type === 'empty') continue; // 빈칸은 박스에 들어가도 무시
 
-                const cellRect = cell.element.getBoundingClientRect();
+                // 절대 뷰포트 픽셀 좌표는 캐시된 기하 정보 사용 (마우스 무브마다 매번 getBoundingClientRect()를 강제 호출해 생기는 리플로우 렉 원천 차단)
+                const cellRect = cell.rect;
+                if (!cellRect) continue;
                 
                 // 겹침 검사
                 const isIntersecting = !(
@@ -665,6 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cell.type = 'empty';
             cell.element.classList.add('empty');
             cell.element.classList.remove('resonance-cell');
+            cell.rect = null; // 매칭된 셀의 기하 좌표 캐시 제거
             
             if (cell.imgElement) {
                 cell.imgElement.style.transform = 'scale(0) rotate(180deg)';

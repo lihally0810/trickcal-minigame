@@ -150,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let combo = 0;
     let resonanceCount = 0;
     let lastAwardedComboTier = 0; // 아이템을 지급받은 마지막 콤보 10단위 (1, 2, 3...)
+    let currentScale = 1; // 화면 스케일 비율 저장용 변수
     
     // 타이머 (requestAnimationFrame 기반)
     let timeRemainingMs = TOTAL_TIME_MS;
@@ -233,6 +234,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const scaleX = windowWidth / targetWidth;
         const scaleY = windowHeight / targetHeight;
         const scale = Math.min(scaleX, scaleY);
+        
+        currentScale = scale; // 마우스 좌표 보정을 위한 스케일 저장
         
         // 화면에 맞게 조정 (중앙 정렬 상태 유지하며 크기 변경)
         appContainer.style.transform = `translate(-50%, -50%) scale(${scale})`;
@@ -457,8 +460,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function getRelativePos(clientX, clientY) {
         const rect = boardContainer.getBoundingClientRect();
         return {
-            x: clientX - rect.left,
-            y: clientY - rect.top
+            x: (clientX - rect.left) / currentScale,
+            y: (clientY - rect.top) / currentScale
         };
     }
 

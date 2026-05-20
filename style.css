@@ -72,7 +72,8 @@ body {
 }
 
 #app-container.modal-active {
-    filter: blur(8px);
+    /* 모달 팝업 시 실시간 픽셀 블러 연산 제거로 CPU 부하 0% 달성 */
+    filter: none;
 }
 
 /* 4. 상단 헤더 영역 */
@@ -375,8 +376,15 @@ body {
 .board-cell.highlight-valid .personality-icon, .board-cell.highlight-invalid .personality-icon {
     animation: shake 0.5s infinite;
 }
+.board-cell.resonance-cell {
+    /* 이미지 필터 대신 하드웨어 가속이 적용되는 셀 자체의 box-shadow 애니메이션을 부여해 연산 격감 */
+    animation: resonance-pulse 2s infinite alternate ease-in-out;
+    box-shadow: 0 0 10px var(--color-primary);
+    background: rgba(255, 142, 187, 0.3);
+}
 .board-cell.resonance-cell .personality-icon {
-    animation: rainbow-glow 3s infinite linear;
+    /* 무거운 filter 기반 rainbow-glow 제거 */
+    transform: scale(1);
 }
 
 /* ==========================================================================
@@ -445,8 +453,8 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(44, 62, 80, 0.35);
-    backdrop-filter: blur(4px);
+    /* 실시간 블러 필터 연산을 0%로 줄이고, 더 깊이감 있고 세련된 반투명 다크 톤으로 변경 */
+    background: rgba(24, 20, 36, 0.6);
     display: none;
     justify-content: center;
     align-items: center;
@@ -593,10 +601,23 @@ body {
 @keyframes pulse { 0% { opacity: 1; } 100% { opacity: 0.7; } }
 @keyframes scale-pop { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
 @keyframes rainbow-text { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-@keyframes rainbow-glow {
-    0% { filter: drop-shadow(0 0 2px rgba(255, 77, 77, 0.8)) hue-rotate(0deg); transform: scale(1); }
-    50% { filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.9)) hue-rotate(180deg); transform: scale(1.08); }
-    100% { filter: drop-shadow(0 0 2px rgba(255, 77, 77, 0.8)) hue-rotate(360deg); transform: scale(1); }
+@keyframes resonance-pulse {
+    0% {
+        box-shadow: 0 0 4px rgba(255, 77, 77, 0.6);
+        transform: scale(1);
+    }
+    33% {
+        box-shadow: 0 0 12px rgba(241, 196, 15, 0.8);
+        transform: scale(1.04);
+    }
+    66% {
+        box-shadow: 0 0 12px rgba(63, 197, 240, 0.8);
+        transform: scale(1.04);
+    }
+    100% {
+        box-shadow: 0 0 4px rgba(155, 89, 182, 0.6);
+        transform: scale(1);
+    }
 }
 @keyframes item-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 @keyframes item-spin { 0% { transform: scale(1.08) rotate(0deg); } 100% { transform: scale(1.08) rotate(360deg); } }

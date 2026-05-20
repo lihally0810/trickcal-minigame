@@ -152,12 +152,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastAwardedComboTier = 0; // 아이템을 지급받은 마지막 콤보 10단위 (1, 2, 3...)
     let currentScale = 1; // 화면 스케일 비율 저장용 변수
     
-    // 타이머 (requestAnimationFrame 기반)
+    // 타이머 (setInterval 50ms 기반 고성능 최적화 루프)
     let timeRemainingMs = TOTAL_TIME_MS;
     let comboTimeRemainingMs = 0;
-    let lastFrameTime = 0;
-    let animationFrameId = null;
-    let lastTimerUpdateMs = 0; // 메인 타이머 UI 갱신 간격 제어용 변수
+    let lastTickTime = 0;
+    let gameIntervalId = null;
 
     let gameActive = false;
     let isPaused = false;
@@ -287,14 +286,37 @@ document.addEventListener('DOMContentLoaded', () => {
         soundManager.playGameStart();
         soundManager.playBgm();
         
-        lastFrameTime = performance.now();
-        animationFrameId = requestAnimationFrame(gameLoop);
+        // 기존 인터벌이 있으면 안전하게 초기화
+        if (gameIntervalId) {
+            clearInterval(gameIntervalId);
+            gameIntervalId = null;
+        }
+        
+        lastTickTime = performance.now();
+        gameIntervalId = setInterval(updateGameTicks, 50);
     }
 
     function stopGame(reason = 'timeout') {
         gameActive = false;
-        cancelAnimationFrame(animationFrameId);
+        
+        // 팝업이 뜰 때 즉시 타이머 연산 루프를 완전 종료하여 CPU 부하 0% 실현
+        if (gameIntervalId) {
+            clearInterval(gameIntervalId);
+            gameIntervalId = null;
+        }
+        
         soundManager.stopBgm();
+        
+        // 보드판의 모든 흔들림 및 렌더링 애니메이션 클래스를 즉시 날려 CPU/GPU 완전 휴식 상태로 전환
+        for (let r = 0; r < ROWS; r++) {
+            if (!board[r]) continue;
+            for (let c = 0; c < COLS; c++) {
+                const cell = board[r][c];
+                if (cell && cell.element) {
+                    cell.element.classList.remove('highlight-valid', 'highlight-invalid', 'resonance-cell');
+                }
+            }
+        }
         
         if (reason === 'clear') {
             soundManager.playClear();
@@ -344,44 +366,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function gameLoop(currentTime) {
-        if (!gameActive) return;
+    function updateGameTicks() {
+        if (!gameActive || isPaused || isResetting) return;
         
-        const deltaTime = currentTime - lastFrameTime;
-        lastFrameTime = currentTime;
+        const currentTime = performance.now();
+        const deltaTime = currentTime - lastTickTime;
+        lastTickTime = currentTime;
 
-        if (!isPaused && !isResetting) {
-            // 메인 타이머 업데이트 (스무스하게)
-            timeRemainingMs -= deltaTime;
-            if (timeRemainingMs <= 0) {
-                timeRemainingMs = 0;
-                updateTimerUI();
-                stopGame('timeout');
-                return;
-            }
+        // 메인 타이머 업데이트 (스무스하게)
+        timeRemainingMs -= deltaTime;
+        if (timeRemainingMs <= 0) {
+            timeRemainingMs = 0;
+            updateTimerUI();
+            stopGame('timeout');
+            return;
+        }
+        
+        // 50ms (초당 20회) 주기로만 업데이트하여 레이아웃 연산 비용 절감
+        updateTimerUI();
+
+        // 콤보 타이머 업데이트
+        if (comboTimeRemainingMs > 0) {
+            comboTimeRemainingMs -= deltaTime;
+            const percent = Math.max(0, (comboTimeRemainingMs / COMBO_DURATION_MS) * 100);
+            comboTimerBarFill.style.width = `${percent}%`;
             
-            // 타이머 UI는 50ms (초당 20회) 주기로만 업데이트하여 레이아웃 연산 비용 절감
-            if (currentTime - lastTimerUpdateMs >= 50) {
-                updateTimerUI();
-                lastTimerUpdateMs = currentTime;
-            }
-
-            // 콤보 타이머 업데이트
-            if (comboTimeRemainingMs > 0) {
-                comboTimeRemainingMs -= deltaTime;
-                const percent = (comboTimeRemainingMs / COMBO_DURATION_MS) * 100;
-                comboTimerBarFill.style.width = `${percent}%`;
-                
-                if (comboTimeRemainingMs <= 0) {
-                    comboTimeRemainingMs = 0;
-                    combo = 0;
-                    lastAwardedComboTier = 0; // 콤보 초기화 시 지급 기준도 초기화
-                    updateComboUI();
-                    comboTimerBarBg.style.display = 'none';
-                }
+            if (comboTimeRemainingMs <= 0) {
+                comboTimeRemainingMs = 0;
+                combo = 0;
+                lastAwardedComboTier = 0; // 콤보 초기화 시 지급 기준도 초기화
+                updateComboUI();
+                comboTimerBarBg.style.display = 'none';
             }
         }
-        animationFrameId = requestAnimationFrame(gameLoop);
     }
 
     function updateTimerUI() {
@@ -969,6 +986,24 @@ document.addEventListener('DOMContentLoaded', () => {
         isPaused = true;
         soundManager.playPause();
         soundManager.pauseBgm();
+        
+        // 일시정지 돌입 즉시 타이머 인터벌 클리어
+        if (gameIntervalId) {
+            clearInterval(gameIntervalId);
+            gameIntervalId = null;
+        }
+        
+        // 보드판 흔들림 및 하이라이트 클래스 소멸시켜 CPU/GPU 점유율 절감
+        for (let r = 0; r < ROWS; r++) {
+            if (!board[r]) continue;
+            for (let c = 0; c < COLS; c++) {
+                const cell = board[r][c];
+                if (cell && cell.element) {
+                    cell.element.classList.remove('highlight-valid', 'highlight-invalid');
+                }
+            }
+        }
+
         appContainer.classList.add('modal-active');
         pauseModal.classList.add('active');
     });
@@ -979,7 +1014,11 @@ document.addEventListener('DOMContentLoaded', () => {
         soundManager.resumeBgm();
         appContainer.classList.remove('modal-active');
         pauseModal.classList.remove('active');
-        lastFrameTime = performance.now();
+        
+        // 타이머 루프 재개
+        lastTickTime = performance.now();
+        if (gameIntervalId) clearInterval(gameIntervalId);
+        gameIntervalId = setInterval(updateGameTicks, 50);
     });
 
     restartBtn.addEventListener('click', () => {
@@ -997,7 +1036,23 @@ document.addEventListener('DOMContentLoaded', () => {
         
         gameActive = false;
         isPaused = false;
-        cancelAnimationFrame(animationFrameId);
+        
+        if (gameIntervalId) {
+            clearInterval(gameIntervalId);
+            gameIntervalId = null;
+        }
+        
         soundManager.stopBgm();
+        
+        // 보드판의 모든 하이라이트 및 공명 애니메이션 완벽 중단
+        for (let r = 0; r < ROWS; r++) {
+            if (!board[r]) continue;
+            for (let c = 0; c < COLS; c++) {
+                const cell = board[r][c];
+                if (cell && cell.element) {
+                    cell.element.classList.remove('highlight-valid', 'highlight-invalid', 'resonance-cell');
+                }
+            }
+        }
     });
 });

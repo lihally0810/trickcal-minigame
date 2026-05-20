@@ -82,6 +82,11 @@ body {
     /* 모달 팝업 시 실시간 픽셀 블러 연산 제거로 CPU 부하 0% 달성 */
     filter: none;
 }
+#app-container.paused-active #game-main {
+    filter: blur(25px);
+    opacity: 0.05;
+    pointer-events: none;
+}
 
 /* 4. 상단 헤더 영역 */
 #game-header {
@@ -176,6 +181,7 @@ body {
     display: flex;
     gap: 16px;
     height: calc(100% - 82px);
+    transition: filter 0.3s ease, opacity 0.3s ease;
 }
 
 #sidebar {
@@ -471,6 +477,9 @@ body {
     border-radius: 25px; /* app-container의 border-radius 테두리에 맞춤 */
 }
 .modal-overlay.active { display: flex; opacity: 1; }
+#pause-modal {
+    background: rgba(15, 12, 22, 0.96); /* 일시정지 시 뒷 배경 판독을 100% 차단하기 위해 96% 불투명 다크 톤 적용 */
+}
 .modal-content {
     background: #ffffff;
     border: 5px solid var(--color-primary-light);

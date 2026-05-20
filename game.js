@@ -1040,6 +1040,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         appContainer.classList.add('modal-active');
+        appContainer.classList.add('paused-active');
         pauseModal.classList.add('active');
     });
 
@@ -1048,6 +1049,7 @@ document.addEventListener('DOMContentLoaded', () => {
         soundManager.playResume();
         soundManager.resumeBgm();
         appContainer.classList.remove('modal-active');
+        appContainer.classList.remove('paused-active');
         pauseModal.classList.remove('active');
         
         // 타이머 루프 재개
@@ -1059,11 +1061,13 @@ document.addEventListener('DOMContentLoaded', () => {
     restartBtn.addEventListener('click', () => {
         pauseModal.classList.remove('active');
         appContainer.classList.remove('modal-active');
+        appContainer.classList.remove('paused-active');
         startGame();
     });
 
     exitBtn.addEventListener('click', () => {
         pauseModal.classList.remove('active');
+        appContainer.classList.remove('paused-active');
         startModalTitle.textContent = '트릭컬 성격 공명 링크';
         startModalDesc.innerHTML = '아이콘을 마우스로 드래그하여 사각형으로 감싸 터뜨리세요!<br>사각형 안에 같은 성격이 2~4개 있어야 합니다.';
         startGameBtn.textContent = '게임 시작';

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>트릭컬 성격 공명 링크</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app-container">
+        <!-- 상단 헤더 영역 -->
+        <header id="game-header">
+            <h1 id="game-title">성격 공명 링크 미니게임!</h1>
+            <div id="timer-container">
+                <span id="timer-icon">⏰</span>
+                <span id="timer-label">남은 시간</span>
+                <div id="timer-bar-bg">
+                    <div id="timer-bar-fill"></div>
+                </div>
+            </div>
+            <button id="pause-btn" aria-label="일시정지">
+                <svg viewBox="0 0 24 24" width="24" height="24">
+                    <rect x="5" y="4" width="5" height="16" rx="1.5" fill="currentColor"></rect>
+                    <rect x="14" y="4" width="5" height="16" rx="1.5" fill="currentColor"></rect>
+                </svg>
+            </button>
+        </header>
+
+        <!-- 메인 게임 영역 (사이드바 + 보드) -->
+        <main id="game-main">
+            <!-- 좌측 사이드바 (정보창) -->
+            <section id="sidebar">
+                <!-- 획득 점수 박스 -->
+                <div class="info-box" id="score-box">
+                    <h2 class="info-title">획득 점수</h2>
+                    <div class="info-value" id="score-val">0</div>
+                </div>
+
+                <!-- 콤보 박스 -->
+                <div class="info-box" id="combo-box">
+                    <h2 class="info-title">Combo!</h2>
+                    <div class="info-value" id="combo-val">0</div>
+                    <!-- 콤보 유지 시간 타이머 바 -->
+                    <div id="combo-timer-bar-bg">
+                        <div id="combo-timer-bar-fill"></div>
+                    </div>
+                </div>
+
+                <!-- 공명 아이템 버튼 -->
+                <div id="item-area">
+                    <button id="resonance-btn" class="disabled" disabled aria-label="공명 아이템 사용">
+                        <div class="item-img-container">
+                            <img src="assets/resonance.png" alt="공명 물약" id="resonance-img">
+                            <span class="click-badge">Click!</span>
+                        </div>
+                    </button>
+                    <div id="resonance-count">X0</div>
+                </div>
+            </section>
+
+            <!-- 중앙 게임 보드판 -->
+            <section id="board-container">
+                <div id="game-board" class="board-grid">
+                    <!-- Javascript가 여기에 10x15 그리드 셀들을 생성합니다 -->
+                </div>
+                <!-- 직사각형 면적 선택 박스 -->
+                <div id="selection-box"></div>
+                
+                <!-- 새로운 보드판 로딩 메시지 -->
+                <div id="board-loading-overlay">
+                    <div class="loading-content">
+                        <div class="spinner"></div>
+                        <p>새로운 보드판 로딩 중...</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 일시정지 모달 팝업 -->
+    <div id="pause-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="modal-title">잠시 중단되었습니다</h2>
+            <div class="modal-buttons">
+                <button id="resume-btn" class="modal-btn btn-primary">계속하기</button>
+                <button id="restart-btn" class="modal-btn btn-secondary">다시하기</button>
+                <button id="exit-btn" class="modal-btn btn-danger">나가기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 게임 시작 대기 및 결과 팝업 -->
+    <div id="start-modal" class="modal-overlay active">
+        <div class="modal-content">
+            <h2 class="modal-title" id="start-modal-title">트릭컬 성격 공명 링크</h2>
+            <p class="modal-desc" id="start-modal-desc">같은 성격 아이콘을 상하좌우 드래그하여 연결해 터뜨리세요!<br>2~4개까지 연결 가능하며, 빈 자리를 활용해 길을 내세요.</p>
+            <div class="modal-buttons">
+                <button id="start-game-btn" class="modal-btn btn-primary">게임 시작</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,536 @@
+/* ==========================================================================
+   트릭컬 성격 공명 링크 - CSS 스타일시트 (면적 드래그 조작계 개편)
+   ========================================================================== */
+
+/* 1. 웹 폰트 로드 - ONE 모바일POP (가장 빠르고 안정적인 WebFontWorld CDN) */
+@import url('https://webfontworld.github.io/One/OneMobilePOP.css');
+
+/* 2. 전역 스타일 및 디자인 토큰 */
+:root {
+    /* 폰트 무조건 강제 적용 */
+    --font-family: 'OneMobilePOP', 'ONE Mobile POP', sans-serif;
+    
+    /* 성격별 시그니처 HSL 컬러 */
+    --color-bg-base: #f9f6fc;
+    --color-madness: #ff4d4d;  /* 광기 */
+    --color-calm: #3fc5f0;     /* 냉정 */
+    --color-pure: #4cd964;     /* 순수 */
+    --color-gloom: #9b59b6;    /* 우울 */
+    --color-lively: #f1c40f;   /* 활발 */
+    --color-resonance: linear-gradient(135deg, #ff4d4d, #f1c40f, #4cd964, #3fc5f0, #9b59b6); /* 공명 */
+
+    /* UI 테마 파스텔톤 */
+    --color-primary: #ff8ebb;  
+    --color-primary-dark: #e86396;
+    --color-primary-light: #ffd2e5;
+    --color-border: #ccd1e4;
+    --color-card-bg: rgba(255, 255, 255, 0.9);
+    --shadow-premium: 0 10px 30px rgba(183, 140, 203, 0.2), 0 1px 8px rgba(0, 0, 0, 0.05);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+body {
+    font-family: var(--font-family);
+    background: radial-gradient(circle at 50% 50%, #fff7fb 0%, #ede6f5 100%);
+    color: #2c3e50;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* 3. 앱 레이아웃 컨테이너 */
+#app-container {
+    width: 1024px;
+    height: 640px;
+    background: var(--color-card-bg);
+    border: 5px solid var(--color-primary-light);
+    border-radius: 30px;
+    box-shadow: var(--shadow-premium);
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    position: relative;
+    transition: filter 0.3s ease;
+}
+
+#app-container.modal-active {
+    filter: blur(8px);
+}
+
+/* 4. 상단 헤더 영역 */
+#game-header {
+    height: 70px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    border-bottom: 3px dashed var(--color-primary-light);
+    margin-bottom: 12px;
+}
+
+#game-title {
+    font-size: 24px;
+    font-weight: normal;
+    color: #34495e;
+    letter-spacing: -0.5px;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-shadow: 1px 1px 0px #fff, 2px 2px 0px var(--color-primary-light);
+    font-family: var(--font-family) !important;
+}
+
+#timer-container {
+    display: flex;
+    align-items: center;
+    background: #f0ecf7;
+    padding: 6px 16px;
+    border-radius: 20px;
+    border: 2px solid #dcd6eb;
+    flex-grow: 0.6;
+    margin: 0 20px;
+}
+
+#timer-icon { font-size: 20px; margin-right: 8px; }
+
+#timer-label {
+    font-size: 16px;
+    margin-right: 12px;
+    color: #5d6d7e;
+    white-space: nowrap;
+    font-family: var(--font-family) !important;
+}
+
+#timer-bar-bg {
+    flex-grow: 1;
+    height: 16px;
+    background: #d5dbdb;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #bdc3c7;
+    position: relative;
+}
+
+/* 타이머 바 애니메이션 최적화 - width 대신 transform 사용 여부는 나중에 고도화 가능하지만 requestAnimationFrame과 width로도 충분히 스무스함 */
+#timer-bar-fill {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #7ad67b 0%, #4cd964 100%);
+    border-radius: 8px;
+    /* 부드러운 트랜지션 적용 */
+    transition: width 0.05s linear, background 0.5s ease;
+}
+
+#timer-bar-fill.warning {
+    background: linear-gradient(90deg, #ff7b7b 0%, var(--color-madness) 100%);
+    animation: pulse 1s infinite alternate;
+}
+
+#pause-btn {
+    width: 44px;
+    height: 44px;
+    background: #e2f0d9;
+    border: 2px solid #a8d08d;
+    border-radius: 12px;
+    cursor: pointer;
+    color: #385723;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 0px #a8d08d;
+}
+#pause-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 0px #a8d08d; background: #d6ebd0; }
+#pause-btn:active { transform: translateY(2px); box-shadow: 0 2px 0px #a8d08d; }
+
+/* 5. 메인 레이아웃 및 사이드바 */
+#game-main {
+    flex-grow: 1;
+    display: flex;
+    gap: 16px;
+    height: calc(100% - 82px);
+}
+
+#sidebar {
+    width: 180px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    justify-content: flex-start;
+}
+
+.info-box {
+    background: #ffffff;
+    border: 3px solid #d3dbff;
+    border-radius: 20px;
+    padding: 12px;
+    text-align: center;
+    box-shadow: 0 6px 12px rgba(183, 140, 203, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+#score-box { border-color: #d3dbff; }
+#combo-box { border-color: #ffd6e8; }
+
+.info-title {
+    font-size: 16px;
+    color: #7f8c8d;
+    margin-bottom: 6px;
+    font-weight: normal;
+    font-family: var(--font-family) !important;
+}
+
+.info-value {
+    font-size: 32px;
+    color: #2c3e50;
+    transition: transform 0.1s ease;
+    font-family: var(--font-family) !important;
+}
+
+.info-value.rainbow-active {
+    background: linear-gradient(45deg, #ff4d4d, #f1c40f, #4cd964, #3fc5f0, #9b59b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: rainbow-text 1.5s infinite linear, scale-pop 0.3s ease;
+    text-shadow: none !important;
+    font-weight: bold;
+}
+
+#combo-timer-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: #f0f3f4;
+    border-radius: 3px;
+    margin-top: 8px;
+    overflow: hidden;
+    display: none; 
+}
+#combo-timer-bar-fill {
+    height: 100%;
+    width: 100%;
+    background: var(--color-primary);
+    border-radius: 3px;
+    transition: width 0.05s linear;
+}
+
+/* 공명 아이템 영역 */
+#item-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: auto;
+    gap: 8px;
+}
+#resonance-btn {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ffffff 30%, #f0f7ff 100%);
+    border: 3px solid #bcd1ff;
+    cursor: pointer;
+    box-shadow: 0 8px 16px rgba(183, 140, 203, 0.15), inset 0 -4px 8px rgba(0,0,0,0.05);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#resonance-btn:not(.disabled) {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 15px rgba(255, 142, 187, 0.5), 0 8px 20px rgba(255, 142, 187, 0.25);
+    animation: item-bounce 2s infinite ease-in-out;
+}
+#resonance-btn.disabled {
+    filter: grayscale(100%);
+    opacity: 0.6;
+    cursor: not-allowed;
+    border-color: #ccd1e4;
+    box-shadow: none;
+}
+#resonance-btn.active {
+    transform: scale(1.08);
+    border-color: #00ffff;
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.8), inset 0 0 10px rgba(0, 255, 255, 0.5);
+    animation: item-spin 5s infinite linear;
+}
+.item-img-container {
+    position: relative;
+    width: 80%;
+    height: 80%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#resonance-img {
+    width: 85%;
+    height: 85%;
+    object-fit: contain;
+    transition: transform 0.2s ease;
+}
+#resonance-btn:hover:not(.disabled) #resonance-img { transform: scale(1.15) rotate(10deg); }
+
+.click-badge {
+    position: absolute;
+    bottom: -5px;
+    background: #ff4757;
+    color: #fff;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1.5px solid #fff;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+    display: none;
+    animation: badge-pulse 0.8s infinite alternate;
+    font-family: var(--font-family) !important;
+}
+#resonance-btn:not(.disabled) .click-badge { display: block; }
+#resonance-count {
+    font-size: 22px;
+    color: #34495e;
+    text-shadow: 1px 1px 0px #fff;
+    font-family: var(--font-family) !important;
+}
+
+/* 6. 게임 보드판 컨테이너 및 그리드 */
+#board-container {
+    flex-grow: 1;
+    background: #ffffff;
+    border: 4px solid var(--color-primary-light);
+    border-radius: 24px;
+    box-shadow: inset 0 4px 10px rgba(183, 140, 203, 0.08);
+    position: relative;
+    overflow: hidden; /* 영역 밖으로 나가는 selection-box 가리기용 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+}
+
+#game-board {
+    display: grid;
+    grid-template-columns: repeat(15, 1fr);
+    grid-template-rows: repeat(9, 1fr);
+    gap: 4px;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    /* 드래그 이벤트를 부드럽게 캐치하기 위함 */
+    touch-action: none;
+}
+
+.board-cell {
+    aspect-ratio: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    position: relative;
+    transition: background-color 0.2s, transform 0.1s ease;
+    background: rgba(249, 246, 252, 0.4);
+    /* 셀 자체가 마우스 이벤트를 뺏지 않도록 */
+    pointer-events: none; 
+}
+.board-cell.empty { background: transparent; }
+.personality-icon {
+    width: 90%;
+    height: 90%;
+    object-fit: contain;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.2s;
+    pointer-events: none;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+}
+
+/* 면적 드래그 방식: 
+   하이라이트된 아이콘 표시 */
+.board-cell.highlight-valid {
+    background-color: rgba(76, 217, 100, 0.2);
+    border: 2px solid #4cd964;
+    transform: scale(1.05);
+}
+.board-cell.highlight-invalid {
+    background-color: rgba(255, 77, 77, 0.2);
+    border: 2px solid #ff4d4d;
+    transform: scale(1.05);
+}
+
+.board-cell.highlight-valid .personality-icon, .board-cell.highlight-invalid .personality-icon {
+    animation: shake 0.5s infinite;
+}
+.board-cell.resonance-cell .personality-icon {
+    animation: rainbow-glow 3s infinite linear;
+}
+
+/* ==========================================================================
+   직사각형 선택 박스 (사과 게임 방식 드래그 영역)
+   ========================================================================== */
+#selection-box {
+    position: absolute;
+    border: 2px dashed var(--color-primary-dark);
+    background: rgba(255, 142, 187, 0.2);
+    pointer-events: none;
+    z-index: 20;
+    display: none;
+    border-radius: 8px;
+    box-shadow: inset 0 0 10px rgba(255, 142, 187, 0.4);
+}
+
+/* 유효하지 않은 매칭(다른 성격 섞임, 개수 미달/초과) 시 박스 색상 빨간색으로 변경 */
+#selection-box.invalid {
+    border-color: #ff4d4d;
+    background: rgba(255, 77, 77, 0.2);
+    box-shadow: inset 0 0 10px rgba(255, 77, 77, 0.4);
+}
+#selection-box.valid {
+    border-color: #4cd964;
+    background: rgba(76, 217, 100, 0.2);
+    box-shadow: inset 0 0 10px rgba(76, 217, 100, 0.4);
+}
+
+
+/* 새로운 보드판 로딩 레이어 */
+#board-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.85);
+    display: none; 
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+    border-radius: 20px;
+}
+.loading-content { text-align: center; }
+.loading-content p {
+    font-size: 20px;
+    color: var(--color-primary-dark);
+    margin-top: 15px;
+    animation: text-pulse 1s infinite alternate;
+    font-family: var(--font-family) !important;
+}
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid var(--color-primary-light);
+    border-top: 5px solid var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s infinite linear;
+    margin: 0 auto;
+}
+
+/* 7. 모달 팝업 구조 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(44, 62, 80, 0.35);
+    backdrop-filter: blur(4px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.modal-overlay.active { display: flex; opacity: 1; }
+.modal-content {
+    background: #ffffff;
+    border: 5px solid var(--color-primary-light);
+    border-radius: 24px;
+    padding: 32px;
+    width: 560px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    transform: scale(0.8);
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.modal-overlay.active .modal-content { transform: scale(1); }
+
+.modal-title {
+    font-size: 26px;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 0px #fff, 2px 2px 0px var(--color-primary-light);
+    font-weight: normal;
+    font-family: var(--font-family) !important;
+}
+.modal-desc {
+    font-size: 15px;
+    line-height: 1.6;
+    color: #7f8c8d;
+    margin-bottom: 24px;
+    font-family: var(--font-family) !important;
+}
+.modal-buttons { display: flex; flex-direction: column; gap: 12px; }
+.modal-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 18px;
+    font-family: var(--font-family) !important;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-primary { background: var(--color-primary); color: #fff; box-shadow: 0 4px 0px var(--color-primary-dark); }
+.btn-primary:hover { background: var(--color-primary-dark); transform: translateY(-2px); box-shadow: 0 6px 0px #cf4c7f; }
+.btn-primary:active { transform: translateY(2px); box-shadow: 0 2px 0px #cf4c7f; }
+
+.btn-secondary { background: #e2f0d9; color: #385723; box-shadow: 0 4px 0px #a8d08d; }
+.btn-secondary:hover { background: #d6ebd0; transform: translateY(-2px); box-shadow: 0 6px 0px #a8d08d; }
+.btn-secondary:active { transform: translateY(2px); box-shadow: 0 2px 0px #a8d08d; }
+
+.btn-danger { background: #fbcacf; color: #c0392b; box-shadow: 0 4px 0px #e74c3c; }
+.btn-danger:hover { background: #fad2d6; transform: translateY(-2px); box-shadow: 0 6px 0px #e74c3c; }
+.btn-danger:active { transform: translateY(2px); box-shadow: 0 2px 0px #e74c3c; }
+
+/* 파티클 효과 */
+.particle {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    pointer-events: none;
+    z-index: 30;
+    animation: explode 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    background-size: contain;
+    background-repeat: no-repeat;
+}
+
+/* ==========================================================================
+   9. 키프레임 애니메이션 정의
+   ========================================================================== */
+@keyframes pulse { 0% { opacity: 1; } 100% { opacity: 0.7; } }
+@keyframes scale-pop { 0% { transform: scale(1); } 50% { transform: scale(1.3); } 100% { transform: scale(1); } }
+@keyframes rainbow-text { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+@keyframes rainbow-glow {
+    0% { filter: drop-shadow(0 0 2px rgba(255, 77, 77, 0.8)) hue-rotate(0deg); transform: scale(1); }
+    50% { filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.9)) hue-rotate(180deg); transform: scale(1.08); }
+    100% { filter: drop-shadow(0 0 2px rgba(255, 77, 77, 0.8)) hue-rotate(360deg); transform: scale(1); }
+}
+@keyframes item-bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes item-spin { 0% { transform: scale(1.08) rotate(0deg); } 100% { transform: scale(1.08) rotate(360deg); } }
+@keyframes badge-pulse { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+@keyframes text-pulse { from { opacity: 0.4; } to { opacity: 1; } }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes explode {
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+    100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(var(--rot)); opacity: 0; }
+}
+@keyframes shake {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-3deg); }
+    75% { transform: rotate(3deg); }
+}

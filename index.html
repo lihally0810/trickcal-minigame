@@ -84,42 +84,42 @@
                 </div>
             </section>
         </main>
-    </div>
 
-    <!-- 일시정지 모달 팝업 -->
-    <div id="pause-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2 class="modal-title">일시 정지 중</h2>
-            
-            <!-- 사운드 볼륨 조절 영역 -->
-            <div id="volume-controls">
-                <div class="volume-row">
-                    <span class="volume-label">🎵 배경음악</span>
-                    <input type="range" id="bgm-volume" class="volume-slider" min="0" max="100" value="30">
-                    <span class="volume-value" id="bgm-volume-val">30</span>
+        <!-- 일시정지 모달 팝업 -->
+        <div id="pause-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h2 class="modal-title">일시 정지 중</h2>
+                
+                <!-- 사운드 볼륨 조절 영역 -->
+                <div id="volume-controls">
+                    <div class="volume-row">
+                        <span class="volume-label">🎵 배경음악</span>
+                        <input type="range" id="bgm-volume" class="volume-slider" min="0" max="100" value="30">
+                        <span class="volume-value" id="bgm-volume-val">30</span>
+                    </div>
+                    <div class="volume-row">
+                        <span class="volume-label">🔊 효과음</span>
+                        <input type="range" id="sfx-volume" class="volume-slider" min="0" max="100" value="70">
+                        <span class="volume-value" id="sfx-volume-val">70</span>
+                    </div>
                 </div>
-                <div class="volume-row">
-                    <span class="volume-label">🔊 효과음</span>
-                    <input type="range" id="sfx-volume" class="volume-slider" min="0" max="100" value="70">
-                    <span class="volume-value" id="sfx-volume-val">70</span>
+                
+                <div class="modal-buttons">
+                    <button id="resume-btn" class="modal-btn btn-primary">계속하기</button>
+                    <button id="restart-btn" class="modal-btn btn-secondary">다시하기</button>
+                    <button id="exit-btn" class="modal-btn btn-danger">나가기</button>
                 </div>
-            </div>
-            
-            <div class="modal-buttons">
-                <button id="resume-btn" class="modal-btn btn-primary">계속하기</button>
-                <button id="restart-btn" class="modal-btn btn-secondary">다시하기</button>
-                <button id="exit-btn" class="modal-btn btn-danger">나가기</button>
             </div>
         </div>
-    </div>
 
-    <!-- 게임 시작 대기 및 결과 팝업 -->
-    <div id="start-modal" class="modal-overlay active">
-        <div class="modal-content">
-            <h2 class="modal-title" id="start-modal-title">트릭컬 성격 공명 링크</h2>
-            <p class="modal-desc" id="start-modal-desc">같은 성격 아이콘을 상하좌우 드래그하여 연결해 터뜨리세요!<br>2~4개까지 연결 가능하며, 빈 자리를 활용해 길을 내세요.</p>
-            <div class="modal-buttons">
-                <button id="start-game-btn" class="modal-btn btn-primary">게임 시작</button>
+        <!-- 게임 시작 대기 및 결과 팝업 -->
+        <div id="start-modal" class="modal-overlay active">
+            <div class="modal-content">
+                <h2 class="modal-title" id="start-modal-title">트릭컬 성격 공명 링크</h2>
+                <p class="modal-desc" id="start-modal-desc">같은 성격 아이콘을 상하좌우 드래그하여 연결해 터뜨리세요!<br>2~4개까지 연결 가능하며, 빈 자리를 활용해 길을 내세요.</p>
+                <div class="modal-buttons">
+                    <button id="start-game-btn" class="modal-btn btn-primary">게임 시작</button>
+                </div>
             </div>
         </div>
     </div>

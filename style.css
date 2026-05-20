@@ -2,8 +2,13 @@
    트릭컬 성격 공명 링크 - CSS 스타일시트 (면적 드래그 조작계 개편)
    ========================================================================== */
 
-/* 1. 웹 폰트 로드 - ONE 모바일POP (가장 빠르고 안정적인 WebFontWorld CDN) */
-@import url('https://webfontworld.github.io/One/OneMobilePOP.css');
+/* 1. 로컬 폰트 로드 - 사용자가 추가한 ONE 모바일POP 폰트 사용 */
+@font-face {
+    font-family: 'OneMobilePOP';
+    src: url('assets/ONE%20Mobile%20POP.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
 
 /* 2. 전역 스타일 및 디자인 토큰 */
 :root {
@@ -34,6 +39,7 @@
     padding: 0;
     user-select: none;
     -webkit-user-drag: none;
+    -webkit-tap-highlight-color: transparent; /* 모바일 터치 하이라이트 제거 */
 }
 
 body {
@@ -41,9 +47,8 @@ body {
     background: radial-gradient(circle at 50% 50%, #fff7fb 0%, #ede6f5 100%);
     color: #2c3e50;
     min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    width: 100vw;
+    position: relative;
     overflow: hidden;
 }
 
@@ -58,8 +63,12 @@ body {
     display: flex;
     flex-direction: column;
     padding: 16px;
-    position: relative;
-    transition: filter 0.3s ease;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transform-origin: center center;
+    transition: filter 0.3s ease, transform 0.1s ease;
 }
 
 #app-container.modal-active {
@@ -497,6 +506,75 @@ body {
 .btn-danger:hover { background: #fad2d6; transform: translateY(-2px); box-shadow: 0 6px 0px #e74c3c; }
 .btn-danger:active { transform: translateY(2px); box-shadow: 0 2px 0px #e74c3c; }
 
+/* 볼륨 조절 영역 */
+#volume-controls {
+    background: #f8f5fc;
+    border: 2px solid #e8e0f0;
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+}
+
+.volume-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+.volume-row:last-child { margin-bottom: 0; }
+
+.volume-label {
+    font-size: 14px;
+    color: #5d6d7e;
+    white-space: nowrap;
+    min-width: 90px;
+    text-align: left;
+    font-family: var(--font-family) !important;
+}
+
+.volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    flex-grow: 1;
+    height: 8px;
+    background: #dcd6eb;
+    border-radius: 4px;
+    outline: none;
+    cursor: pointer;
+}
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--color-primary);
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+}
+.volume-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+.volume-slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    background: var(--color-primary);
+    border-radius: 50%;
+    border: 3px solid #fff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    cursor: pointer;
+}
+
+.volume-value {
+    font-size: 14px;
+    color: #34495e;
+    min-width: 28px;
+    text-align: right;
+    font-family: var(--font-family) !important;
+}
+
 /* 파티클 효과 */
 .particle {
     position: absolute;
@@ -533,4 +611,63 @@ body {
     0%, 100% { transform: rotate(0deg); }
     25% { transform: rotate(-3deg); }
     75% { transform: rotate(3deg); }
+}
+
+/* ==========================================================================
+   10. 모바일 회전 안내 화면 및 추가 최적화
+   ========================================================================== */
+#rotate-instruction {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle at 50% 50%, #fff7fb 0%, #ede6f5 100%);
+    z-index: 9999;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #2c3e50;
+    font-family: var(--font-family) !important;
+    padding: 20px;
+}
+
+/* 모바일 세로 모드(portrait) 및 좁은 비율일 때 가로 모드 회전 안내 표시 */
+@media screen and (max-aspect-ratio: 1/1), screen and (orientation: portrait) {
+    #rotate-instruction {
+        display: flex;
+    }
+}
+
+.instruction-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.instruction-content .phone-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    animation: rotate-phone 2s infinite ease-in-out;
+}
+
+.instruction-content p {
+    font-size: 22px;
+    margin-bottom: 12px;
+    color: var(--color-primary-dark);
+    font-family: var(--font-family) !important;
+}
+
+.instruction-content span {
+    font-size: 14px;
+    color: #7f8c8d;
+    font-family: var(--font-family) !important;
+}
+
+@keyframes rotate-phone {
+    0% { transform: rotate(0deg); }
+    50% { transform: rotate(-90deg); }
+    100% { transform: rotate(0deg); }
 }

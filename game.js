@@ -2,6 +2,131 @@
    트릭컬 성격 공명 링크 - 게임 플레이 로직 (면적 드래그 방식, 부드러운 타이머 적용)
    ========================================================================== */
 
+// ==========================================================================
+// 사운드 매니저 (Web Audio API 기반 합성음 + BGM)
+// ==========================================================================
+class SoundManager {
+    constructor() {
+        this.audioCtx = null;
+        this.bgmElement = document.getElementById('bgm-audio');
+        this.bgmVolume = 0.5;
+        this.sfxVolume = 0.7;
+        this._initialized = false;
+    }
+
+    init() {
+        if (this._initialized) return;
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        this._initialized = true;
+    }
+
+    setBgmVolume(val) {
+        this.bgmVolume = val;
+        if (this.bgmElement) this.bgmElement.volume = val;
+    }
+
+    setSfxVolume(val) {
+        this.sfxVolume = val;
+    }
+
+    playBgm() {
+        this.init();
+        if (this.bgmElement) {
+            this.bgmElement.volume = this.bgmVolume;
+            this.bgmElement.currentTime = 0;
+            this.bgmElement.play().catch(() => {});
+        }
+    }
+
+    pauseBgm() {
+        if (this.bgmElement) this.bgmElement.pause();
+    }
+
+    resumeBgm() {
+        if (this.bgmElement) this.bgmElement.play().catch(() => {});
+    }
+
+    stopBgm() {
+        if (this.bgmElement) {
+            this.bgmElement.pause();
+            this.bgmElement.currentTime = 0;
+        }
+    }
+
+    // --- Web Audio API 합성 효과음 ---
+    _playTone(freq, type, duration, volumeMult = 1) {
+        this.init();
+        if (!this.audioCtx || this.sfxVolume === 0) return;
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+        gain.gain.setValueAtTime(this.sfxVolume * volumeMult * 0.3, this.audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        osc.start();
+        osc.stop(this.audioCtx.currentTime + duration);
+    }
+
+    playMatch() {
+        this._playTone(523.25, 'sine', 0.12, 0.8);
+        setTimeout(() => this._playTone(659.25, 'sine', 0.12, 0.8), 50);
+        setTimeout(() => this._playTone(783.99, 'sine', 0.2, 0.6), 100);
+    }
+
+    playResonanceClick() {
+        this._playTone(440, 'sine', 0.15, 0.5);
+        setTimeout(() => this._playTone(554.37, 'triangle', 0.2, 0.6), 80);
+        setTimeout(() => this._playTone(659.25, 'sine', 0.3, 0.4), 160);
+    }
+
+    playResonanceUse() {
+        this._playTone(392, 'triangle', 0.1, 0.7);
+        setTimeout(() => this._playTone(523.25, 'triangle', 0.1, 0.7), 60);
+        setTimeout(() => this._playTone(659.25, 'triangle', 0.1, 0.7), 120);
+        setTimeout(() => this._playTone(783.99, 'sine', 0.3, 0.5), 180);
+    }
+
+    playPause() {
+        this._playTone(600, 'sine', 0.08, 0.4);
+        setTimeout(() => this._playTone(400, 'sine', 0.12, 0.3), 60);
+    }
+
+    playGameStart() {
+        this._playTone(523.25, 'sine', 0.12, 0.6);
+        setTimeout(() => this._playTone(659.25, 'sine', 0.12, 0.6), 100);
+        setTimeout(() => this._playTone(783.99, 'sine', 0.12, 0.6), 200);
+        setTimeout(() => this._playTone(1046.50, 'sine', 0.3, 0.5), 300);
+    }
+
+    playGameOver() {
+        this._playTone(392, 'sawtooth', 0.2, 0.3);
+        setTimeout(() => this._playTone(349.23, 'sawtooth', 0.2, 0.3), 150);
+        setTimeout(() => this._playTone(293.66, 'sawtooth', 0.4, 0.25), 300);
+    }
+
+    playClear() {
+        const notes = [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50, 1318.51];
+        notes.forEach((freq, i) => {
+            setTimeout(() => this._playTone(freq, 'sine', 0.2, 0.5), i * 100);
+        });
+    }
+
+    playComboReward() {
+        this._playTone(880, 'sine', 0.1, 0.5);
+        setTimeout(() => this._playTone(1108.73, 'sine', 0.1, 0.5), 80);
+        setTimeout(() => this._playTone(1318.51, 'sine', 0.25, 0.4), 160);
+    }
+
+    playResume() {
+        this._playTone(400, 'sine', 0.08, 0.4);
+        setTimeout(() => this._playTone(600, 'sine', 0.12, 0.3), 60);
+    }
+}
+
+const soundManager = new SoundManager();
+
 document.addEventListener('DOMContentLoaded', () => {
     // 사용자 기획 의도: 총 135칸 (9 * 15) -> 전부 없앴을 때 정확히 135점 달성!
     const ROWS = 9;
@@ -75,6 +200,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const restartBtn = document.getElementById('restart-btn');
     const exitBtn = document.getElementById('exit-btn');
 
+    // 볼륨 조절 UI
+    const bgmVolumeSlider = document.getElementById('bgm-volume');
+    const sfxVolumeSlider = document.getElementById('sfx-volume');
+    const bgmVolumeVal = document.getElementById('bgm-volume-val');
+    const sfxVolumeVal = document.getElementById('sfx-volume-val');
+
+    bgmVolumeSlider.addEventListener('input', () => {
+        const val = bgmVolumeSlider.value;
+        bgmVolumeVal.textContent = val;
+        soundManager.setBgmVolume(val / 100);
+    });
+    sfxVolumeSlider.addEventListener('input', () => {
+        const val = sfxVolumeSlider.value;
+        sfxVolumeVal.textContent = val;
+        soundManager.setSfxVolume(val / 100);
+    });
+
+    // ==========================================================================
+    // 반응형 스케일핏(Scale Fit) 조절 로직 (모바일/PC 모두 완벽 피팅)
+    // ==========================================================================
+    function resizeGame() {
+        if (!appContainer) return;
+        
+        const targetWidth = 1024;
+        const targetHeight = 640;
+        
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        
+        // 화면 해상도 비율에 맞추어 스케일링 비율 결정
+        const scaleX = windowWidth / targetWidth;
+        const scaleY = windowHeight / targetHeight;
+        const scale = Math.min(scaleX, scaleY);
+        
+        // 화면에 맞게 조정 (중앙 정렬 상태 유지하며 크기 변경)
+        appContainer.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    }
+    
+    // 리사이즈 이벤트 등록 및 즉시 실행
+    window.addEventListener('resize', resizeGame);
+    window.addEventListener('load', resizeGame);
+    resizeGame();
+
     // ==========================================================================
     // 게임 라이프사이클 및 타이머 루프
     // ==========================================================================
@@ -109,6 +277,9 @@ document.addEventListener('DOMContentLoaded', () => {
         gameActive = true;
         isPaused = false;
         
+        soundManager.playGameStart();
+        soundManager.playBgm();
+        
         lastFrameTime = performance.now();
         animationFrameId = requestAnimationFrame(gameLoop);
     }
@@ -116,6 +287,13 @@ document.addEventListener('DOMContentLoaded', () => {
     function stopGame(reason = 'timeout') {
         gameActive = false;
         cancelAnimationFrame(animationFrameId);
+        soundManager.stopBgm();
+        
+        if (reason === 'clear') {
+            soundManager.playClear();
+        } else {
+            soundManager.playGameOver();
+        }
         
         if (score > highScore) {
             highScore = score;
@@ -457,6 +635,8 @@ document.addEventListener('DOMContentLoaded', () => {
             maxCombo = combo;
         }
 
+        soundManager.playMatch();
+
         updateScoreUI();
         updateComboUI();
 
@@ -473,6 +653,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             updateResonanceUI();
             triggerComboRainbowEffect();
+            soundManager.playComboReward();
         }
 
         matchedCells.forEach(cell => {
@@ -710,6 +891,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (resonanceCount <= 0 || !gameActive || isPaused || isResetting) return;
         isResonanceMode = !isResonanceMode;
         if (isResonanceMode) {
+            soundManager.playResonanceClick();
             resonanceBtn.classList.add('active');
             gameBoard.style.boxShadow = '0 0 20px rgba(0, 255, 255, 0.6)';
             appContainer.style.cursor = 'crosshair';
@@ -722,6 +904,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applyResonanceItem(cell) {
         if (cell.type === 'empty' || cell.type === TYPE_RESONANCE) return;
+        
+        soundManager.playResonanceUse();
         
         cell.type = TYPE_RESONANCE;
         cell.imgElement.src = 'assets/resonance.png';
@@ -747,15 +931,19 @@ document.addEventListener('DOMContentLoaded', () => {
     pauseBtn.addEventListener('click', () => {
         if (!gameActive || isPaused || isResetting) return;
         isPaused = true;
+        soundManager.playPause();
+        soundManager.pauseBgm();
         appContainer.classList.add('modal-active');
         pauseModal.classList.add('active');
     });
 
     resumeBtn.addEventListener('click', () => {
         isPaused = false;
+        soundManager.playResume();
+        soundManager.resumeBgm();
         appContainer.classList.remove('modal-active');
         pauseModal.classList.remove('active');
-        lastFrameTime = performance.now(); // 일시정지 풀릴 때 틱 튀는 현상 방지
+        lastFrameTime = performance.now();
     });
 
     restartBtn.addEventListener('click', () => {
@@ -774,5 +962,6 @@ document.addEventListener('DOMContentLoaded', () => {
         gameActive = false;
         isPaused = false;
         cancelAnimationFrame(animationFrameId);
+        soundManager.stopBgm();
     });
 });

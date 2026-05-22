@@ -714,3 +714,782 @@ body {
     50% { transform: rotate(-90deg); }
     100% { transform: rotate(0deg); }
 }
+
+/* ==========================================================================
+   11. 신설 메인 로비 화면 및 5종 모달 테마 스타일 추가
+   ========================================================================== */
+
+/* 화면 공통 스크린 트랜지션 */
+.screen {
+    width: 100%;
+    height: 100%;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    flex-direction: column;
+}
+.screen.active {
+    display: flex;
+    opacity: 1;
+}
+
+/* 로비 화면 전용 배경 - 사랑스럽고 신비로운 핑크-라벤더 펄 그라디언트 */
+#lobby-screen {
+    background: radial-gradient(circle at 50% 50%, #fffdfd 0%, #f6effc 100%);
+}
+
+/* 로비 상단 헤더 - 로즈 피치 파스텔 점선 테두리 */
+#lobby-header {
+    height: 82px; /* 헤더 높이를 늘려 하단 점선이 볼륨 버튼과 절대 겹치지 않도록 조정 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 16px;
+    border-bottom: 3.5px dashed #ffd5e0;
+    margin-bottom: 16px;
+}
+
+#lobby-title-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#lobby-title {
+    font-size: 28px;
+    font-weight: normal;
+    color: #5a4b41;
+    letter-spacing: -0.5px;
+    text-shadow: 1px 1px 0px #fff, 2.5px 2.5px 0px #e8d0b3;
+    font-family: var(--font-family) !important;
+}
+
+#beta-badge {
+    background-color: #586AE9;
+    color: #ffffff;
+    font-size: 11px;
+    padding: 2.5px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(88, 106, 233, 0.15);
+    font-family: var(--font-family) !important;
+}
+
+/* 녹색 계열 원형 볼륨 버튼 (기획서 100% 반영) */
+#volume-btn {
+    width: 44px;
+    height: 44px;
+    background: #B2F07D;
+    border: 3px solid #53A240;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #000000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.2s ease;
+    box-shadow: 0 3px 0px #53A240;
+}
+#volume-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 0px #53A240;
+    background: #c2f594;
+}
+#volume-btn:active {
+    transform: translateY(1.5px);
+    box-shadow: 0 1.5px 0px #53A240;
+}
+
+/* 로비 메인 콘텐츠 정렬 (기획서 기준 절대 좌표로 전면 정밀 배치) */
+#lobby-main {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    flex-grow: 1;
+}
+
+#lobby-left {
+    position: absolute;
+    left: 45px;
+    top: 95px;
+    width: 220px;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+#lobby-center {
+    position: absolute;
+    left: 50%;
+    top: 48%;
+    transform: translate(-50%, -50%);
+    z-index: 50;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#lobby-right {
+    position: absolute;
+    right: 45px;
+    top: 95px;
+    display: flex;
+    flex-direction: row; /* 가로 나란히 배치 */
+    gap: 16px;
+    width: auto;
+    z-index: 60;
+}
+
+/* 일일 플레이 보상 박스 (기획서 기준 투명 래퍼) */
+#reward-box {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    text-align: center;
+    box-shadow: none;
+}
+
+#reward-title {
+    font-size: 16px;
+    color: #000000;
+    margin-top: 14px;
+    margin-bottom: 0;
+    font-weight: bold;
+    font-family: var(--font-family) !important;
+    text-shadow: none;
+}
+
+#reward-list {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+/* 마카롱 아이템 슬롯 (파스텔 펄 카드 리디자인) */
+.reward-item {
+    width: 64px;
+    height: 86px;
+    border-radius: 16px;
+    border: 3px solid #d4cbe5;
+    background: #ece6f5;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    cursor: not-allowed;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    outline: none;
+    padding: 6px 4px;
+}
+
+.reward-item:disabled {
+    filter: grayscale(100%);
+    opacity: 0.65;
+}
+
+/* 활성화되어 수령 가능한 상태 - 화사한 로즈핑크 펄 카드 */
+.reward-item.claimable {
+    filter: none;
+    opacity: 1;
+    border-color: #ff9eb5;
+    background: #fff5f7;
+    cursor: pointer;
+    box-shadow: 0 0 15px rgba(255, 158, 181, 0.5), inset 0 2px 5px rgba(255, 255, 255, 0.8);
+    animation: item-bounce 1.8s infinite ease-in-out;
+}
+.reward-item.claimable:hover {
+    transform: scale(1.1) rotate(3deg);
+    box-shadow: 0 0 22px rgba(255, 158, 181, 0.8), inset 0 2px 5px rgba(255, 255, 255, 0.8);
+}
+.reward-item.claimable:active {
+    transform: scale(0.95);
+}
+
+/* 수령 완료 상태 - 파스텔 민트연두 카드 */
+.reward-item.claimed {
+    filter: none;
+    opacity: 1;
+    background: #edf8e7;
+    border-color: #9ad87c;
+    cursor: default;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+    animation: none;
+}
+.reward-item.claimed::after {
+    content: '✓';
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 20px;
+    height: 20px;
+    background: #53a240;
+    border-radius: 50%;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    z-index: 10;
+}
+.reward-item.claimed:hover {
+    transform: none;
+}
+
+.macaron-img {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+    pointer-events: none;
+}
+
+.reward-badge {
+    position: relative;
+    background: #af99d6;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: bold;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 1.5px solid #ffffff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    font-family: var(--font-family) !important;
+    margin-top: auto;
+}
+.reward-item.claimed .reward-badge {
+    background: #7dbd5a;
+}
+
+/* 중앙 오각형 프리미엄 그래픽 래퍼 */
+#pentagon-wrapper {
+    position: relative;
+    width: 320px;
+    height: 320px;
+    filter: drop-shadow(0 15px 30px rgba(183, 140, 203, 0.35));
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.pentagon-svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 10;
+}
+
+#pentagon-panel {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 20;
+}
+
+/* 꼭짓점 성격별 반투명 둥근 펄 트레이 */
+.pentagon-tray {
+    position: absolute;
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.45);
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 6px 12px rgba(183, 140, 203, 0.12), inset 0 2px 4px rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.pentagon-tray:hover {
+    transform: scale(1.15) !important;
+    background: rgba(255, 255, 255, 0.75);
+    box-shadow: 0 8px 16px rgba(183, 140, 203, 0.25), inset 0 2px 4px rgba(255, 255, 255, 0.9);
+}
+
+/* 꼭짓점 아이콘 부드러운 둥둥뜨기 애니메이션 효과 */
+.pentagon-icon {
+    width: 52px;
+    height: 52px;
+    object-fit: contain;
+    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.12));
+    pointer-events: none;
+}
+
+@keyframes float-slow {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.pentagon-tray.madness {
+    top: 0px;
+    left: 126px; /* 320px 판넬 너비 기준 중앙 정렬 고정 (translateX와의 애니메이션 덮어쓰기 충돌 해결) */
+    animation: float-slow 3s infinite ease-in-out;
+}
+.pentagon-tray.pure {
+    top: 96px;
+    right: 2px;
+    animation: float-slow 3.2s infinite ease-in-out 0.6s;
+}
+.pentagon-tray.calm {
+    bottom: 14px;
+    right: 54px;
+    animation: float-slow 3.4s infinite ease-in-out 1.2s;
+}
+.pentagon-tray.lively {
+    bottom: 14px;
+    left: 54px;
+    animation: float-slow 3.6s infinite ease-in-out 1.8s;
+}
+.pentagon-tray.gloom {
+    top: 96px;
+    left: 2px;
+    animation: float-slow 3.8s infinite ease-in-out 2.4s;
+}
+
+/* 정중앙 공명 트레이 */
+.resonance-tray {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 88px;
+    height: 88px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 8px 20px rgba(183, 140, 203, 0.18), inset 0 2px 4px rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 30;
+    animation: resonance-lobby-pulse 3s infinite alternate ease-in-out;
+}
+
+.resonance-tray .pentagon-icon.resonance {
+    width: 74px;
+    height: 74px;
+}
+
+@keyframes resonance-lobby-pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 0 0 10px rgba(255, 162, 193, 0.4), 0 8px 20px rgba(183, 140, 203, 0.18);
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.08);
+        box-shadow: 0 0 22px rgba(255, 162, 193, 0.75), 0 10px 24px rgba(183, 140, 203, 0.25);
+        filter: drop-shadow(0 4px 8px rgba(0,0,0,0.12));
+    }
+}
+
+/* 메뉴 우측 이동 버튼군 (파스텔 펄 입체 카드) */
+.lobby-menu-btn {
+    background: #fffdf9;
+    border: 3.5px solid #ffb2c8;
+    border-radius: 16px;
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 110px;
+    height: 85px;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 0px #e598ac;
+    outline: none;
+}
+.lobby-menu-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0px #e598ac;
+    background: #fff2f5;
+}
+.lobby-menu-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0px #e598ac;
+}
+
+.menu-icon {
+    font-size: 32px;
+    line-height: 1;
+}
+
+.menu-text {
+    font-size: 16px;
+    color: #4a3525;
+    font-weight: bold;
+    font-family: var(--font-family) !important;
+}
+
+/* 로비 하단 영역 (기획서 정밀 배치) */
+#lobby-footer {
+    height: 150px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: auto;
+    padding-bottom: 8px;
+    width: 100%;
+}
+
+#uros-container {
+    display: flex;
+    align-items: flex-end;
+    position: relative;
+    left: -12px;
+    bottom: -16px;
+}
+
+/* 우로스 말풍선 그림자 및 꼬리 정교화 */
+#uros-speech {
+    position: absolute;
+    bottom: 185px; /* 우로스 캐릭터 확대에 맞춰 말풍선 높이를 위로 대폭 상향 조정 (캐릭터 머리를 가리지 않도록 방지) */
+    left: 135px;   /* 말풍선을 살짝 오른쪽으로 이동시켜 캐릭터와 겹치지 않게 조율 */
+    background: #ffffff;
+    border: 3px solid #ebdcb9;
+    border-radius: 26px;
+    padding: 12px 20px;
+    min-width: 170px;
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(90, 75, 65, 0.16);
+    z-index: 50;
+    pointer-events: none;
+}
+
+.speech-tail {
+    position: absolute;
+    bottom: -27px; /* 말풍선의 3px 두께 아래 테두리선(윤곽선) 위에 꼬리가 정밀하게 밀착되어 윤곽선을 끊지 않고 이어지도록 조정 */
+    left: 26px;    /* 우로스 캐릭터가 있는 왼쪽으로 부드럽게 휘어져 뻗는 가로 시작점 */
+    width: 40px;
+    height: 30px;
+    /* 말풍선 사각형 윤곽선(베이지색 선)을 훼손 없이 보존하면서 그 흐름에 찰싹 맞물리는 정밀 SVG 곡선 꼬리 */
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='30' viewBox='0 0 40 30'><path d='M 18 0 L 34 0 C 30 10 14 24 2 26 C 8 22 20 10 18 0 Z' fill='%23ffffff'/><path d='M 34 0 C 30 10 14 24 2 26 C 8 22 20 10 18 0' fill='none' stroke='%23ebdcb9' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    background-size: contain;
+    background-repeat: no-repeat;
+    filter: drop-shadow(-3px 4px 2px rgba(90, 75, 65, 0.12));
+    pointer-events: none;
+    z-index: 51;
+}
+.speech-tail::after {
+    display: none; /* 단일 SVG 구조로 전환됨에 따라 기존 다각형 덮개 제거 */
+}
+
+#uros-speech p {
+    font-size: 15px;
+    color: #000000;
+    font-weight: bold;
+    margin: 0;
+    line-height: 1.4;
+    font-family: var(--font-family) !important;
+}
+
+#uros-character {
+    width: 220px; /* 캐릭터 이미지 크기를 조금 더 풍성하게 키움 */
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 5px 10px rgba(90, 75, 65, 0.2));
+    z-index: 40;
+    pointer-events: none; /* 마우스 호버 및 클릭, 드래그 시 어떠한 움직임이나 방해도 발생하지 않도록 차단 */
+}
+
+/* 메인 플레이/튜토리얼 버튼 (프리미엄 핑크-라벤더 그라디언트 및 광채 튜닝) */
+#lobby-buttons {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 24px;
+    margin-right: 28px;
+}
+
+.lobby-btn {
+    font-family: var(--font-family) !important;
+    border: none;
+    border-radius: 40px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+    color: #ffffff;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-shadow: 0px 2px 4px rgba(110, 50, 150, 0.4);
+    background: linear-gradient(135deg, #ff8e9c 0%, #c38fff 100%);
+    box-shadow: 0 4px 0px #9c67d9;
+}
+
+#lobby-tutorial-btn {
+    padding: 12px 32px;
+    font-size: 20px;
+    height: 50px;
+}
+#lobby-tutorial-btn:hover {
+    background: linear-gradient(135deg, #ffa3af 0%, #cc9eff 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0px #9c67d9;
+    filter: drop-shadow(0 0 10px rgba(255, 142, 156, 0.5));
+}
+#lobby-tutorial-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0px #9c67d9;
+}
+
+.btn-play {
+    padding: 12px 64px;
+    font-size: 28px;
+    height: 72px;
+    box-shadow: 0 6px 0px #9c67d9;
+}
+.btn-play:hover {
+    background: linear-gradient(135deg, #ffa3af 0%, #cc9eff 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 0px #9c67d9;
+    filter: drop-shadow(0 0 14px rgba(255, 142, 156, 0.65));
+}
+.btn-play:active {
+    transform: translateY(3px);
+    box-shadow: 0 3px 0px #9c67d9;
+}
+
+/* 신설 5종 모달 내부 리스트 디자인 */
+
+/* 1. 업적 모달 */
+#achieve-list {
+    max-height: 250px;
+    overflow-y: auto;
+    padding-right: 6px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.achieve-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fdfbf7;
+    border: 2.5px solid #ebdcb9;
+    border-radius: 16px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    text-align: left;
+    box-shadow: 0 3px 6px rgba(90, 75, 65, 0.04);
+}
+.achieve-item:last-child {
+    margin-bottom: 0;
+}
+
+.achieve-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.achieve-title {
+    font-size: 15px;
+    color: #5a4b41;
+    font-weight: normal;
+    font-family: var(--font-family) !important;
+}
+
+.achieve-desc {
+    font-size: 12px;
+    color: #9c897c;
+    font-family: var(--font-family) !important;
+}
+
+.achieve-status {
+    font-size: 12px;
+    font-family: var(--font-family) !important;
+    padding: 4px 10px;
+    border-radius: 10px;
+    min-width: 65px;
+    text-align: center;
+}
+
+.achieve-status.locked {
+    background: #ede6dd;
+    color: #8b7365;
+}
+
+.achieve-status.completed {
+    background: #e2f0d9;
+    color: #385723;
+    border: 1.5px solid #a8d08d;
+}
+
+/* 2. 최고 점수 랭킹 */
+#rank-list {
+    max-height: 250px;
+    overflow-y: auto;
+    padding-right: 6px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.rank-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fdfbf7;
+    border: 2.5px solid #ebdcb9;
+    border-radius: 16px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    box-shadow: 0 3px 6px rgba(90, 75, 65, 0.04);
+}
+.rank-item:last-child {
+    margin-bottom: 0;
+}
+
+.rank-num {
+    font-size: 18px;
+    font-weight: bold;
+    color: #5a4b41;
+    width: 30px;
+    text-align: center;
+    font-family: var(--font-family) !important;
+}
+.rank-num.gold {
+    color: #f1c40f;
+    text-shadow: 0px 0px 4px rgba(241, 196, 15, 0.4);
+}
+.rank-num.silver {
+    color: #bdc3c7;
+}
+.rank-num.bronze {
+    color: #e67e22;
+}
+
+.rank-date {
+    font-size: 13px;
+    color: #9c897c;
+    flex-grow: 1;
+    text-align: left;
+    margin-left: 12px;
+    font-family: var(--font-family) !important;
+}
+
+.rank-score {
+    font-size: 18px;
+    font-weight: normal;
+    color: var(--color-primary-dark);
+    font-family: var(--font-family) !important;
+}
+
+.rank-score-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.rank-time {
+    font-size: 11px;
+    color: #9c897c;
+    margin-top: 2px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-family: var(--font-family) !important;
+}
+
+/* 3. 튜토리얼 모달 */
+.tutorial-body {
+    max-height: 280px;
+    overflow-y: auto;
+    padding-right: 6px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tutorial-desc {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #8b7365;
+    margin-bottom: 16px;
+    text-align: left;
+    background: #faf6f0;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border-left: 4px solid var(--color-primary);
+    font-family: var(--font-family) !important;
+}
+
+.tutorial-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #fdfbf7;
+    border: 2px solid #ebdcb9;
+    border-radius: 16px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    text-align: left;
+}
+.tutorial-step:last-child {
+    margin-bottom: 0;
+}
+
+.step-badge {
+    width: 24px;
+    height: 24px;
+    background: var(--color-primary);
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 13px;
+    font-weight: bold;
+    flex-shrink: 0;
+    font-family: var(--font-family) !important;
+}
+
+.tutorial-step p {
+    font-size: 13px;
+    color: #5a4b41;
+    margin: 0;
+    line-height: 1.4;
+    font-family: var(--font-family) !important;
+}
+
+/* 4. 보상 획득 모달 */
+.reward-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin: 10px 0;
+}
+
+.reward-pop-img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+    animation: float-slow 2s infinite ease-in-out;
+}
+
+/* 5. 볼륨 설정 모달 전용 */
+#lobby-volume-controls {
+    background: #faf6f0;
+    border: 2.5px solid #ebdcb9;
+    border-radius: 18px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+}
+

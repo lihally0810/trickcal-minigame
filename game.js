@@ -181,8 +181,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const highScoreKey = 'trickcal_link_highscore_v2';
     let highScore = localStorage.getItem(highScoreKey) || 0;
 
-    // DOM 요소
+    // DOM 요소 (로비 및 게임 신설 요소 포함)
     const appContainer = document.getElementById('app-container');
+    const lobbyScreen = document.getElementById('lobby-screen');
+    const gameScreen = document.getElementById('game-screen');
+    
     const gameBoard = document.getElementById('game-board');
     const boardContainer = document.getElementById('board-container');
     const selectionBox = document.getElementById('selection-box');
@@ -197,10 +200,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const resonanceCountTxt = document.getElementById('resonance-count');
     const boardLoadingOverlay = document.getElementById('board-loading-overlay');
 
+    // 모달 팝업 요소들
     const startModal = document.getElementById('start-modal');
     const startModalTitle = document.getElementById('start-modal-title');
     const startModalDesc = document.getElementById('start-modal-desc');
     const startGameBtn = document.getElementById('start-game-btn');
+    const lobbyBackBtn = document.getElementById('lobby-back-btn'); // 신설 로비행 버튼
 
     const pauseBtn = document.getElementById('pause-btn');
     const pauseModal = document.getElementById('pause-modal');
@@ -208,27 +213,583 @@ document.addEventListener('DOMContentLoaded', () => {
     const restartBtn = document.getElementById('restart-btn');
     const exitBtn = document.getElementById('exit-btn');
 
-    // 볼륨 조절 UI
-    const bgmVolumeSlider = document.getElementById('bgm-volume');
-    const sfxVolumeSlider = document.getElementById('sfx-volume');
-    const bgmVolumeVal = document.getElementById('bgm-volume-val');
-    const sfxVolumeVal = document.getElementById('sfx-volume-val');
+    // 신설 모달 5종
+    const achieveModal = document.getElementById('achieve-modal');
+    const rankModal = document.getElementById('rank-modal');
+    const tutorialModal = document.getElementById('tutorial-modal');
+    const rewardModal = document.getElementById('reward-modal');
+    const volumeModal = document.getElementById('volume-modal');
 
-    bgmVolumeSlider.addEventListener('input', () => {
-        const val = bgmVolumeSlider.value;
-        bgmVolumeVal.textContent = val;
-        soundManager.setBgmVolume(val / 100);
-    });
-    sfxVolumeSlider.addEventListener('input', () => {
-        const val = sfxVolumeSlider.value;
-        sfxVolumeVal.textContent = val;
-        soundManager.setSfxVolume(val / 100);
-    });
+    // 로비 제어 버튼들
+    const volumeBtn = document.getElementById('volume-btn');
+    const achieveBtn = document.getElementById('achieve-btn');
+    const rankBtn = document.getElementById('rank-btn');
+    const lobbyTutorialBtn = document.getElementById('lobby-tutorial-btn');
+    const playBtn = document.getElementById('play-btn');
+
+    // 신설 모달 닫기 확인 버튼들
+    const achieveCloseBtn = document.getElementById('achieve-close-btn');
+    const rankCloseBtn = document.getElementById('rank-close-btn');
+    const tutorialCloseBtn = document.getElementById('tutorial-close-btn');
+    const rewardCloseBtn = document.getElementById('reward-close-btn');
+    const volumeCloseBtn = document.getElementById('volume-close-btn');
+    const dataResetBtn = document.getElementById('data-reset-btn');
+
+    // 신설 볼륨 설정 UI 슬라이더 및 텍스트 (로비)
+    const lobbyBgmVolume = document.getElementById('lobby-bgm-volume');
+    const lobbySfxVolume = document.getElementById('lobby-sfx-volume');
+    const lobbyBgmVolumeVal = document.getElementById('lobby-bgm-volume-val');
+    const lobbySfxVolumeVal = document.getElementById('lobby-sfx-volume-val');
+
+    // 인게임 일시정지 볼륨 설정 UI 슬라이더 및 텍스트
+    const gameBgmVolume = document.getElementById('bgm-volume');
+    const gameSfxVolume = document.getElementById('sfx-volume');
+    const gameBgmVolumeVal = document.getElementById('bgm-volume-val');
+    const gameSfxVolumeVal = document.getElementById('sfx-volume-val');
+
+    // ==========================================================================
+    // 볼륨 세팅 로드 및 동기화
+    // ==========================================================================
+    function initVolumeSettings() {
+        let savedBgm = localStorage.getItem('trickcal_bgm_vol');
+        let savedSfx = localStorage.getItem('trickcal_sfx_vol');
+
+        // 기본값 세팅: BGM 30, SFX 70
+        if (savedBgm === null) savedBgm = 30;
+        if (savedSfx === null) savedSfx = 70;
+
+        savedBgm = parseInt(savedBgm);
+        savedSfx = parseInt(savedSfx);
+
+        // 슬라이더 및 텍스트 값 반영 (로비)
+        if (lobbyBgmVolume) {
+            lobbyBgmVolume.value = savedBgm;
+            lobbyBgmVolumeVal.textContent = savedBgm;
+        }
+        if (lobbySfxVolume) {
+            lobbySfxVolume.value = savedSfx;
+            lobbySfxVolumeVal.textContent = savedSfx;
+        }
+
+        // 슬라이더 및 텍스트 값 반영 (인게임 일시정지)
+        if (gameBgmVolume) {
+            gameBgmVolume.value = savedBgm;
+            gameBgmVolumeVal.textContent = savedBgm;
+        }
+        if (gameSfxVolume) {
+            gameSfxVolume.value = savedSfx;
+            gameSfxVolumeVal.textContent = savedSfx;
+        }
+
+        // 사운드 매니저 볼륨 실시간 세팅
+        soundManager.setBgmVolume(savedBgm / 100);
+        soundManager.setSfxVolume(savedSfx / 100);
+    }
+
+    if (lobbyBgmVolume) {
+        lobbyBgmVolume.addEventListener('input', () => {
+            const val = parseInt(lobbyBgmVolume.value);
+            lobbyBgmVolumeVal.textContent = val;
+            soundManager.setBgmVolume(val / 100);
+            localStorage.setItem('trickcal_bgm_vol', val);
+            
+            // 인게임 쪽 슬라이더도 실시간 싱크
+            if (gameBgmVolume) {
+                gameBgmVolume.value = val;
+                gameBgmVolumeVal.textContent = val;
+            }
+        });
+    }
+    if (lobbySfxVolume) {
+        lobbySfxVolume.addEventListener('input', () => {
+            const val = parseInt(lobbySfxVolume.value);
+            lobbySfxVolumeVal.textContent = val;
+            soundManager.setSfxVolume(val / 100);
+            localStorage.setItem('trickcal_sfx_vol', val);
+            
+            // 인게임 쪽 슬라이더도 실시간 싱크
+            if (gameSfxVolume) {
+                gameSfxVolume.value = val;
+                gameSfxVolumeVal.textContent = val;
+            }
+        });
+    }
+
+    if (gameBgmVolume) {
+        gameBgmVolume.addEventListener('input', () => {
+            const val = parseInt(gameBgmVolume.value);
+            gameBgmVolumeVal.textContent = val;
+            soundManager.setBgmVolume(val / 100);
+            localStorage.setItem('trickcal_bgm_vol', val);
+            
+            // 로비 쪽 슬라이더도 실시간 싱크
+            if (lobbyBgmVolume) {
+                lobbyBgmVolume.value = val;
+                lobbyBgmVolumeVal.textContent = val;
+            }
+        });
+    }
+    if (gameSfxVolume) {
+        gameSfxVolume.addEventListener('input', () => {
+            const val = parseInt(gameSfxVolume.value);
+            gameSfxVolumeVal.textContent = val;
+            soundManager.setSfxVolume(val / 100);
+            localStorage.setItem('trickcal_sfx_vol', val);
+            
+            // 로비 쪽 슬라이더도 실시간 싱크
+            if (lobbySfxVolume) {
+                lobbySfxVolume.value = val;
+                lobbySfxVolumeVal.textContent = val;
+            }
+        });
+    }
+
+    // 초기 볼륨 활성화
+    initVolumeSettings();
+
+    // ==========================================================================
+    // 일일 플레이 트래킹 및 보상 로컬스토리지 로직
+    // ==========================================================================
+    function getTodayString() {
+        const d = new Date();
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function checkDailyReset() {
+        const today = getTodayString();
+        const lastDate = localStorage.getItem('trickcal_daily_plays_date');
+
+        if (lastDate !== today) {
+            localStorage.setItem('trickcal_daily_plays_date', today);
+            localStorage.setItem('trickcal_daily_plays_count', '0');
+            localStorage.setItem('trickcal_daily_rewards_claimed', JSON.stringify([false, false, false]));
+        }
+    }
+
+    function getDailyPlaysCount() {
+        checkDailyReset();
+        return parseInt(localStorage.getItem('trickcal_daily_plays_count') || '0');
+    }
+
+    function incrementDailyPlays() {
+        checkDailyReset();
+        const count = getDailyPlaysCount();
+        localStorage.setItem('trickcal_daily_plays_count', String(count + 1));
+        updateRewardIcons();
+    }
+
+    function getDailyRewardsClaimed() {
+        checkDailyReset();
+        try {
+            return JSON.parse(localStorage.getItem('trickcal_daily_rewards_claimed') || '[false, false, false]');
+        } catch (e) {
+            return [false, false, false];
+        }
+    }
+
+    function setDailyRewardClaimed(index) {
+        const claimed = getDailyRewardsClaimed();
+        claimed[index] = true;
+        localStorage.setItem('trickcal_daily_rewards_claimed', JSON.stringify(claimed));
+        updateRewardIcons();
+    }
+
+    // 마카롱 일일 보상 아이콘 상태 갱신
+    function updateRewardIcons() {
+        const count = getDailyPlaysCount();
+        const claimed = getDailyRewardsClaimed();
+
+        for (let i = 1; i <= 3; i++) {
+            const rewardItem = document.getElementById(`reward-${i}`);
+            if (!rewardItem) continue;
+
+            rewardItem.classList.remove('claimable', 'claimed');
+            rewardItem.removeAttribute('disabled');
+
+            if (claimed[i - 1]) {
+                // 이미 보상 수령한 슬롯
+                rewardItem.classList.add('claimed');
+                rewardItem.setAttribute('disabled', 'true');
+            } else if (count >= i) {
+                // 보상 수령 가능한 슬롯 (플레이 횟수 충족)
+                rewardItem.classList.add('claimable');
+            } else {
+                // 아직 플레이 횟수 부족
+                rewardItem.setAttribute('disabled', 'true');
+            }
+        }
+    }
+
+    // 일일 보상 클릭 이벤트 바인딩
+    for (let i = 1; i <= 3; i++) {
+        const rewardItem = document.getElementById(`reward-${i}`);
+        if (rewardItem) {
+            rewardItem.addEventListener('click', () => {
+                const count = getDailyPlaysCount();
+                const claimed = getDailyRewardsClaimed();
+                const step = i;
+
+                if (!claimed[step - 1] && count >= step) {
+                    // 수령 처리
+                    setDailyRewardClaimed(step - 1);
+                    soundManager.playClear();
+
+                    // 보상 획득 모달 활성화
+                    const rewardDescTxt = document.getElementById('reward-desc-txt');
+                    if (rewardDescTxt) {
+                        rewardDescTxt.innerHTML = `달콤한 일일 플레이 마카롱 보상(${step}회차)을 수령했습니다!<br>우로스의 응원을 받아 기운이 가득 솟아납니다!`;
+                    }
+                    openModal(rewardModal);
+                    
+                    // 기근상 업적 검사 연동
+                    if (step === 3) {
+                        unlockAchievement('daily_attendance');
+                    }
+                }
+            });
+        }
+    }
+
+    // ==========================================================================
+    // 업적(Achievements) 및 랭킹(Rankings) 코어 시스템
+    // ==========================================================================
+    const ACHIEVEMENTS = [
+        { id: 'first_play', title: '첫 조율의 발걸음', desc: '성격 공명 링크 미니게임을 1회 완료하기' },
+        { id: 'score_80', title: '능숙한 조율사', desc: '단일 게임에서 최고 80점 이상 획득하기' },
+        { id: 'combo_20', title: '완벽한 시너지', desc: '단일 게임에서 최대 20콤보 이상 달성하기' },
+        { id: 'resonance_master', title: '공명 에너지 과부하', desc: '누적 공명 물약 5회 사용하기 (모든 판 합산)' },
+        { id: 'daily_attendance', title: '오늘의 참모', desc: '일일 플레이 3회차 마카롱 보상을 수령하기' },
+        { id: 'perfect_clear', title: '성격 공명의 신', desc: '보드판을 완벽히 비우고 135점 최고 만점 달성하기' }
+    ];
+
+    function getUnlockedAchievements() {
+        try {
+            return JSON.parse(localStorage.getItem('trickcal_unlocked_achievements') || '[]');
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function unlockAchievement(id) {
+        const unlocked = getUnlockedAchievements();
+        if (!unlocked.includes(id)) {
+            unlocked.push(id);
+            localStorage.setItem('trickcal_unlocked_achievements', JSON.stringify(unlocked));
+
+            // 달성 알림 우로스 멘트 제거 (대사 고정 요건 준수)
+        }
+    }
+
+    function checkGameEndAchievements(finalScore, maxComboCount) {
+        // 첫 플레이
+        unlockAchievement('first_play');
+
+        // 80점 돌파
+        if (finalScore >= 80) {
+            unlockAchievement('score_80');
+        }
+
+        // 20콤보 돌파
+        if (maxComboCount >= 20) {
+            unlockAchievement('combo_20');
+        }
+
+        // 135점 완벽 만점 클리어
+        if (finalScore >= 135) {
+            unlockAchievement('perfect_clear');
+        }
+    }
+
+    function incrementResonanceUsage() {
+        let usages = parseInt(localStorage.getItem('trickcal_resonance_usages') || '0');
+        usages++;
+        localStorage.setItem('trickcal_resonance_usages', String(usages));
+        if (usages >= 5) {
+            unlockAchievement('resonance_master');
+        }
+    }
+
+    function renderAchievements() {
+        const listContainer = document.getElementById('achieve-list');
+        if (!listContainer) return;
+
+        const unlocked = getUnlockedAchievements();
+        listContainer.innerHTML = '';
+
+        ACHIEVEMENTS.forEach(ach => {
+            const isUnlocked = unlocked.includes(ach.id);
+            const item = document.createElement('div');
+            item.classList.add('achieve-item');
+
+            item.innerHTML = `
+                <div class="achieve-info">
+                    <span class="achieve-title">${ach.title}</span>
+                    <span class="achieve-desc">${ach.desc}</span>
+                </div>
+                <div class="achieve-status ${isUnlocked ? 'completed' : 'locked'}">
+                    ${isUnlocked ? '달성 완료 ✓' : '미달성'}
+                </div>
+            `;
+            listContainer.appendChild(item);
+        });
+    }
+
+    // 점수 랭킹 시스템
+    function getRankings() {
+        try {
+            return JSON.parse(localStorage.getItem('trickcal_rankings_v2') || '[]');
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function addRanking(newScore, timeStr) {
+        const list = getRankings();
+        const d = new Date();
+        const dateStr = `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+        const timestamp = d.getTime();
+
+        list.push({ score: newScore, date: dateStr, time: timeStr || '', timestamp: timestamp });
+
+        // 소요 시간 문자열을 초 단위 정수로 파싱하는 내부 헬퍼 함수
+        function parseTimeToSeconds(tStr) {
+            if (!tStr) return 999999; // 소요 시간 기록이 없는 구버전 데이터는 뒤로 정렬
+            const match = tStr.match(/(?:(\d+)분\s*)?(\d+)초/);
+            if (!match) return 999999;
+            const min = parseInt(match[1] || '0', 10);
+            const sec = parseInt(match[2], 10);
+            return min * 60 + sec;
+        }
+
+        // 우선순위 정렬 규칙 적용:
+        // 1순위: 점수 내림차순 (높은 점수 우선)
+        // 2순위: 소요 시간 오름차순 (짧은 시간 우선)
+        // 3순위: 먼저 깬 기록 오름차순 (과거 타임스탬프 우선)
+        list.sort((a, b) => {
+            if (b.score !== a.score) {
+                return b.score - a.score;
+            }
+            
+            const aSec = parseTimeToSeconds(a.time);
+            const bSec = parseTimeToSeconds(b.time);
+            if (aSec !== bSec) {
+                return aSec - bSec;
+            }
+            
+            const aTime = a.timestamp || 0;
+            const bTime = b.timestamp || 0;
+            return aTime - bTime;
+        });
+
+        // 상위 5개 보존
+        const sliced = list.slice(0, 5);
+        localStorage.setItem('trickcal_rankings_v2', JSON.stringify(sliced));
+    }
+
+    function renderRankings() {
+        const listContainer = document.getElementById('rank-list');
+        if (!listContainer) return;
+
+        const rankings = getRankings();
+        listContainer.innerHTML = '';
+
+        if (rankings.length === 0) {
+            listContainer.innerHTML = '<p class="modal-desc" style="margin: 20px 0;">아직 달성한 랭킹 기록이 없습니다. 도전해 보세요!</p>';
+            return;
+        }
+
+        rankings.forEach((r, idx) => {
+            const item = document.createElement('div');
+            item.classList.add('rank-item');
+
+            let rankClass = '';
+            if (idx === 0) rankClass = 'gold';
+            else if (idx === 1) rankClass = 'silver';
+            else if (idx === 2) rankClass = 'bronze';
+
+            item.innerHTML = `
+                <div class="rank-num ${rankClass}">${idx + 1}위</div>
+                <div class="rank-date">${r.date}</div>
+                <div class="rank-score-container">
+                    <div class="rank-score">${r.score}점</div>
+                    ${r.time ? `<div class="rank-time">⏰ ${r.time}</div>` : ''}
+                </div>
+            `;
+            listContainer.appendChild(item);
+        });
+    }
+
+    // ==========================================================================
+    // 우로스 대사 및 모달 제어 편의 기능
+    // ==========================================================================
+    const UROS_SPEECHES = [
+        "능력을 발휘해 보겠어요.",
+        "성격 조율은 교단 최고의 연구 과제랍니다.",
+        "마카롱은 달콤하고 아주 소중하답니다!",
+        "도움이 필요하다면 언제든 공명 물약을 쓰세요.",
+        "우로스는 교단의 믿음직한 참모예요!",
+        "오늘 하루도 신나는 조율을 시작해 봐요!",
+        "차분하게 하나씩 이어가면 완벽히 깰 수 있어요."
+    ];
+
+    function changeUrosSpeech(text) {
+        const speechP = document.querySelector('#uros-speech p');
+        if (speechP) {
+            speechP.textContent = text;
+        }
+    }
+
+    function randomUrosSpeech() {
+        const randomTxt = UROS_SPEECHES[Math.floor(Math.random() * UROS_SPEECHES.length)];
+        changeUrosSpeech(randomTxt);
+    }
+
+    // 캐릭터 터치 반응 제거 (대사는 언제나 영구 고정)
+    const urosChar = document.getElementById('uros-character');
+    if (urosChar) {
+        urosChar.addEventListener('click', () => {
+            // 정적 유지
+        });
+    }
+
+    function openModal(modal) {
+        if (!modal) return;
+        appContainer.classList.add('modal-active');
+        modal.classList.add('active');
+        // 부드럽게 오프닝 효과음을 사운드 매니저 볼륨에 맞춤형 재생
+        soundManager.playResume();
+    }
+
+    function closeModal(modal) {
+        if (!modal) return;
+        modal.classList.remove('active');
+        // 켜져 있는 다른 액티브 모달이 없는지 확인 후 컨테이너 모달 비활성화
+        const activeModals = document.querySelectorAll('.modal-overlay.active');
+        if (activeModals.length === 0) {
+            appContainer.classList.remove('modal-active');
+        }
+    }
+
+    // 화면 페이드 트랜지션 연출
+    function showScreen(targetScreen) {
+        const screens = document.querySelectorAll('.screen');
+        screens.forEach(s => {
+            s.classList.remove('active');
+            s.style.display = 'none';
+        });
+
+        targetScreen.style.display = 'flex';
+        void targetScreen.offsetWidth; // 브라우저 강제 레이아웃 동기화 (Reflow 유도)
+        targetScreen.classList.add('active');
+    }
+
+    // ==========================================================================
+    // 로비 화면 제어 버튼 바인딩
+    // ==========================================================================
+    
+    // 볼륨 조절 버튼
+    if (volumeBtn) {
+        volumeBtn.addEventListener('click', () => {
+            initVolumeSettings(); // 최신 세팅값 슬라이더 싱크
+            openModal(volumeModal);
+        });
+    }
+    if (volumeCloseBtn) {
+        volumeCloseBtn.addEventListener('click', () => {
+            closeModal(volumeModal);
+        });
+    }
+    if (dataResetBtn) {
+        dataResetBtn.addEventListener('click', () => {
+            const confirmed = confirm("모든 플레이 기록(점수 랭킹, 최고 기록, 업적 해금 현황, 일일 마카롱 플레이 횟수)을 초기화할까요?");
+            if (confirmed) {
+                const keys = [
+                    'trickcal_rankings_v2',
+                    'trickcal_link_highscore_v2',
+                    'trickcal_unlocked_achievements',
+                    'trickcal_resonance_usages',
+                    'trickcal_daily_plays_date',
+                    'trickcal_daily_plays_count',
+                    'trickcal_daily_rewards_claimed'
+                ];
+                keys.forEach(k => localStorage.removeItem(k));
+                alert("플레이 기록이 완전히 초기화되었습니다!");
+                location.reload();
+            }
+        });
+    }
+
+    // 업적 버튼
+    if (achieveBtn) {
+        achieveBtn.addEventListener('click', () => {
+            renderAchievements();
+            openModal(achieveModal);
+        });
+    }
+    if (achieveCloseBtn) {
+        achieveCloseBtn.addEventListener('click', () => {
+            closeModal(achieveModal);
+        });
+    }
+
+    // 점수 랭킹 버튼
+    if (rankBtn) {
+        rankBtn.addEventListener('click', () => {
+            renderRankings();
+            openModal(rankModal);
+        });
+    }
+    if (rankCloseBtn) {
+        rankCloseBtn.addEventListener('click', () => {
+            closeModal(rankModal);
+        });
+    }
+
+    // 튜토리얼 버튼
+    if (lobbyTutorialBtn) {
+        lobbyTutorialBtn.addEventListener('click', () => {
+            openModal(tutorialModal);
+        });
+    }
+    if (tutorialCloseBtn) {
+        tutorialCloseBtn.addEventListener('click', () => {
+            closeModal(tutorialModal);
+        });
+    }
+
+    // 보상 모달 닫기
+    if (rewardCloseBtn) {
+        rewardCloseBtn.addEventListener('click', () => {
+            closeModal(rewardModal);
+        });
+    }
+
+    // Play! 버튼 누를 때 로비 -> 인게임 페이드
+    if (playBtn) {
+        playBtn.addEventListener('click', () => {
+            showScreen(gameScreen);
+            startGame();
+        });
+    }
+
+    // 결과창 "로비로 가기" 연동
+    if (lobbyBackBtn) {
+        lobbyBackBtn.addEventListener('click', () => {
+            closeModal(startModal);
+            showScreen(lobbyScreen);
+            updateRewardIcons(); // 플레이 횟수가 1 추가되었으므로 마카롱 갱신
+        });
+    }
+
+    // 최초 로드 시 마카롱 아이콘 보상 상태 최신 갱신
+    updateRewardIcons();
 
     // ==========================================================================
     // 반응형 스케일핏(Scale Fit) 조절 로직 (모바일/PC 모두 완벽 피팅)
     // ==========================================================================
-    // 실제 모바일 화면에 맞춰 동적 1vh 높이의 픽셀 단위를 계산하여 브라우저에 매핑 (Visual Viewport API 우선 활용)
     function updateVh() {
         const viewportHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         const vh = viewportHeight * 0.01;
@@ -238,45 +799,35 @@ document.addEventListener('DOMContentLoaded', () => {
     function resizeGame() {
         if (!appContainer) return;
         
-        // 가용한 실시간 높이에 맞춰 vh 변수 주입
         updateVh();
         
         const targetWidth = 1024;
         const targetHeight = 640;
         
-        // Visual Viewport API가 있으면 실제 눈에 보이는 순수 영역 기준 계산, 없으면 innerWidth/Height 사용
         const windowWidth = window.visualViewport ? window.visualViewport.width : window.innerWidth;
         const windowHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
         
-        // 화면 해상도 비율에 맞추어 스케일링 비율 결정
         const scaleX = windowWidth / targetWidth;
         const scaleY = windowHeight / targetHeight;
         const scale = Math.min(scaleX, scaleY);
         
         currentScale = scale; // 마우스 좌표 보정을 위한 스케일 저장
         
-        // 화면에 맞게 조정 (중앙 정렬 상태 유지하며 크기 변경)
         appContainer.style.transform = `translate(-50%, -50%) scale(${scale})`;
         
-        // 스케일 변화가 렌더링에 반영된 후 정확한 절대 픽셀 좌표를 재계산하여 캐싱
         requestAnimationFrame(cacheCellCoords);
     }
     
-    // 모바일 브라우저 가로회전/주소창 갱신 지연 버그 극복을 위한 2중 강제 보정 리사이즈 핸들러
     function handleResizeEvent() {
         resizeGame();
-        // 100ms 뒤 모바일 브라우저 뷰포트 변경 완료 시점에 2차 보정
         setTimeout(resizeGame, 100);
-        // 300ms 뒤 마지막 안정화 시점에 3차 최종 보정 (완벽 피팅 보장)
         setTimeout(resizeGame, 300);
     }
     
-    // 리사이즈 및 모바일 화면 회전 이벤트 등록 및 즉시 실행
     window.addEventListener('resize', handleResizeEvent);
     window.addEventListener('orientationchange', handleResizeEvent);
     window.addEventListener('load', handleResizeEvent);
     
-    // Visual Viewport 변화 이벤트 추가 바인딩 (크롬 등 주소창/소프트바 유동 변화 실시간 검출)
     if (window.visualViewport) {
         window.visualViewport.addEventListener('resize', handleResizeEvent);
         window.visualViewport.addEventListener('scroll', handleResizeEvent);
@@ -321,7 +872,6 @@ document.addEventListener('DOMContentLoaded', () => {
         soundManager.playGameStart();
         soundManager.playBgm();
         
-        // 기존 인터벌이 있으면 안전하게 초기화
         if (gameIntervalId) {
             clearInterval(gameIntervalId);
             gameIntervalId = null;
@@ -334,7 +884,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function stopGame(reason = 'timeout') {
         gameActive = false;
         
-        // 팝업이 뜰 때 즉시 타이머 연산 루프를 완전 종료하여 CPU 부하 0% 실현
         if (gameIntervalId) {
             clearInterval(gameIntervalId);
             gameIntervalId = null;
@@ -342,7 +891,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         soundManager.stopBgm();
         
-        // 보드판의 모든 흔들림 및 렌더링 애니메이션 클래스를 즉시 날려 CPU/GPU 완전 휴식 상태로 전환
+        // 보드판의 모든 흔들림 및 렌더링 애니메이션 차단 (CPU 부하 0% 돌입)
         for (let r = 0; r < ROWS; r++) {
             if (!board[r]) continue;
             for (let c = 0; c < COLS; c++) {
@@ -358,20 +907,26 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             soundManager.playGameOver();
         }
-        
-        if (score > highScore) {
-            highScore = score;
-            localStorage.setItem(highScoreKey, highScore);
-        }
 
-        // 소요 시간 계산
+        // 소요 시간 계산을 랭킹 저장 시점보다 상위로 이전하여 시간 정보 전달 준비
         const elapsedMs = TOTAL_TIME_MS - timeRemainingMs;
         const elapsedSec = Math.floor(elapsedMs / 1000);
         const elapsedMin = Math.floor(elapsedSec / 60);
         const elapsedSecRemainder = elapsedSec % 60;
         const timeStr = `${elapsedMin}분 ${elapsedSecRemainder < 10 ? '0' : ''}${elapsedSecRemainder}초`;
 
-        // 점수 상세 내역 HTML
+        // 일일 플레이 횟수 즉각 증가 및 랭킹 추가
+        incrementDailyPlays();
+        addRanking(score, timeStr);
+        
+        // 게임 오버시 업적 검사 실행
+        checkGameEndAchievements(score, maxCombo);
+        
+        if (score > highScore) {
+            highScore = score;
+            localStorage.setItem(highScoreKey, highScore);
+        }
+
         const scoreDetailHtml = `
             점수: <span style="color: var(--color-primary-dark); font-size: 24px;">${score}점</span><br>
             최대 콤보: <span style="color: #2c3e50; font-size: 18px;">${maxCombo}콤보</span><br>
@@ -408,7 +963,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const deltaTime = currentTime - lastTickTime;
         lastTickTime = currentTime;
 
-        // 메인 타이머 업데이트 (스무스하게)
         timeRemainingMs -= deltaTime;
         if (timeRemainingMs <= 0) {
             timeRemainingMs = 0;
@@ -417,10 +971,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        // 50ms (초당 20회) 주기로만 업데이트하여 레이아웃 연산 비용 절감
         updateTimerUI();
 
-        // 콤보 타이머 업데이트
         if (comboTimeRemainingMs > 0) {
             comboTimeRemainingMs -= deltaTime;
             const percent = Math.max(0, (comboTimeRemainingMs / COMBO_DURATION_MS) * 100);
@@ -429,7 +981,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (comboTimeRemainingMs <= 0) {
                 comboTimeRemainingMs = 0;
                 combo = 0;
-                lastAwardedComboTier = 0; // 콤보 초기화 시 지급 기준도 초기화
+                lastAwardedComboTier = 0;
                 updateComboUI();
                 comboTimerBarBg.style.display = 'none';
             }
@@ -480,11 +1032,9 @@ document.addEventListener('DOMContentLoaded', () => {
             board.push(rowData);
         }
 
-        // 혹시 데드락이면 바로 재생성
         if (!hasAvailableMoves()) {
             createBoard();
         } else {
-            // 보드가 완성되었을 때만 기하 픽셀 좌표 1회 캐싱
             cacheCellCoords();
         }
     }
@@ -502,7 +1052,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1200);
     }
 
-    // 셀 절대 좌표 캐싱 진행 (매 마우스 무브마다 getBoundingClientRect를 강제해 렉을 유발하는 Layout Thrashing 방지)
     function cacheCellCoords() {
         if (!board || board.length === 0) return;
         for (let r = 0; r < ROWS; r++) {
@@ -522,7 +1071,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('mousemove', handleDragMove);
     document.addEventListener('mouseup', handleDragEnd);
     
-    // 모바일 터치 대응
     boardContainer.addEventListener('touchstart', (e) => {
         const touch = e.touches[0];
         handleDragStart({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: ()=>e.preventDefault() });
@@ -545,11 +1093,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleDragStart(e) {
         if (!gameActive || isPaused || isResetting) return;
         
-        // 드래그/클릭 시작 시점에 모든 셀의 뷰포트 절대 픽셀 좌표를 최신으로 1회 갱신!
-        // 이로써 화면 해상도/배율 변화, 스크롤 등으로 인한 기하 픽셀 좌표 어긋남을 완벽하게 예방합니다.
         cacheCellCoords();
         
-        // 공명 아이템 단일 클릭 모드 (pointer-events: none 방어용 직접 좌표 연산)
         if (isResonanceMode) {
             for (let r = 0; r < ROWS; r++) {
                 if (!board[r]) continue;
@@ -598,7 +1143,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isSelectionValid && currentSelectedCells.length >= 2) {
             executeMatch(currentSelectedCells);
         } else {
-            // 드래그 실패 시에도 데드락인지 확인 (이미 데드락인데 놓친 경우 방지)
             checkBoardStatus();
         }
         clearSelectionBox();
@@ -617,24 +1161,19 @@ document.addEventListener('DOMContentLoaded', () => {
         selectionBox.style.width = `${width}px`;
         selectionBox.style.height = `${height}px`;
 
-        // 절대 좌표 기반 AABB 충돌 감지
         const boxRect = selectionBox.getBoundingClientRect();
-        
         const newSelectedCells = [];
         
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
                 const cell = board[r][c];
-                // 기존 하이라이트 해제
                 cell.element.classList.remove('highlight-valid', 'highlight-invalid');
                 
-                if (cell.type === 'empty') continue; // 빈칸은 박스에 들어가도 무시
+                if (cell.type === 'empty') continue;
 
-                // 절대 뷰포트 픽셀 좌표는 캐시된 기하 정보 사용 (마우스 무브마다 매번 getBoundingClientRect()를 강제 호출해 생기는 리플로우 렉 원천 차단)
                 const cellRect = cell.rect;
                 if (!cellRect) continue;
                 
-                // 겹침 검사
                 const isIntersecting = !(
                     boxRect.right < cellRect.left || 
                     boxRect.left > cellRect.right || 
@@ -653,13 +1192,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function validateSelection() {
-        // 개수 판별 (2~4개)
         if (currentSelectedCells.length < 2 || currentSelectedCells.length > 4) {
             setSelectionStyle(false);
             return;
         }
 
-        // 성격 통일성 검사 (공명 제외 한 가지 성격만 있어야 함)
         let foundType = null;
         let isValid = true;
 
@@ -667,9 +1204,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (cell.type === TYPE_RESONANCE) continue;
             
             if (!foundType) {
-                foundType = cell.type; // 첫 기준 성격
+                foundType = cell.type;
             } else if (foundType !== cell.type) {
-                isValid = false; // 다른 성격이 끼어듦
+                isValid = false;
                 break;
             }
         }
@@ -690,6 +1227,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // 선택박스 및 하이라이트 해제
     function clearSelectionBox() {
         isSelectionBoxVisible = false;
         selectionBox.style.display = 'none';
@@ -717,7 +1255,6 @@ document.addEventListener('DOMContentLoaded', () => {
         score += count;
         combo += count;
 
-        // 최대 콤보 기록 갱신
         if (combo > maxCombo) {
             maxCombo = combo;
         }
@@ -730,10 +1267,8 @@ document.addEventListener('DOMContentLoaded', () => {
         comboTimeRemainingMs = COMBO_DURATION_MS;
         comboTimerBarBg.style.display = 'block';
 
-        // 10단위(10~19, 20~29...) 달성 시 공명 아이템 지급 로직
         const currentComboTier = Math.floor(combo / 10);
         if (currentComboTier > lastAwardedComboTier) {
-            // 한 번에 단위를 뛰어넘은 만큼 지급 (보통은 1씩 오름)
             const earnedItems = currentComboTier - lastAwardedComboTier;
             resonanceCount += earnedItems;
             lastAwardedComboTier = currentComboTier;
@@ -749,7 +1284,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cell.type = 'empty';
             cell.element.classList.add('empty');
             cell.element.classList.remove('resonance-cell');
-            cell.rect = null; // 매칭된 셀의 기하 좌표 캐시 제거
+            cell.rect = null;
             
             if (cell.imgElement) {
                 cell.imgElement.style.transform = 'scale(0) rotate(180deg)';
@@ -770,7 +1305,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // 보드 갱신 검사 (No More Moves 등)
     // ==========================================================================
     function checkBoardStatus() {
-
         let activeCellsCount = 0;
         for (let r = 0; r < ROWS; r++) {
             for (let c = 0; c < COLS; c++) {
@@ -779,29 +1313,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (activeCellsCount === 0) {
-            score = 135; // 0개 달성 시 135점 만점 처리
+            score = 135;
             updateScoreUI();
             stopGame('clear');
             return;
         }
 
-        // 우선순위 1: 아이콘이 딱 1개만 남은 경우: 공명 물약이 아무리 많아도 짝을 지을 수 없으므로 점수와 무관하게 절대적 데드락
         if (activeCellsCount === 1) {
             stopGame('deadlock');
             return;
         }
 
-        // 우선순위 2: 유저 요청 타협안 (1개 남는 데드락에 빠지지 않고 2개 이상 남은 상태에서 135점을 달성했다면 클리어 판정!)
         if (score >= 135) {
-            score = 135; // 사용자 지시: 임의 조작 없이 135점을 만점으로 고정
+            score = 135;
             updateScoreUI();
             stopGame('clear');
             return;
         }
 
-        // 직사각형 면적 드래그 방식에서의 데드락 판정
-        // 보드 내에 같은 성격(혹은 공명) 2개가 가로 혹은 세로 직선상에 
-        // 중간에 빈 공간만 두고 배치된 경우가 단 1쌍이라도 있으면 통과
         if (!hasAvailableMoves()) {
             if (resonanceCount === 0) {
                 showOverlayText('더 이상 조합이 불가능해요', () => stopGame('deadlock'));
@@ -824,19 +1353,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isPermanent) {
             setTimeout(() => {
                 boardLoadingOverlay.style.display = 'none';
-                if (spinner) spinner.style.display = 'block'; // 원상복구
+                if (spinner) spinner.style.display = 'block';
                 isResetting = false;
                 if (callback) callback();
             }, 1500);
         } else {
-            // 영구 표시 모드일 경우 사라지지 않고 애니메이션(스피너)만 감춘 채 멈춤
             if (callback) callback();
         }
     }
 
-    // 네모(직사각형) 면적 드래그 방식에 맞춘 완벽한 데드락 판정 (전수 검사)
     function hasAvailableMoves() {
-        // 보드판에서 만들 수 있는 모든 가능한 직사각형(Top-Left부터 Bottom-Right) 영역을 탐색합니다.
         for (let r1 = 0; r1 < ROWS; r1++) {
             for (let c1 = 0; c1 < COLS; c1++) {
                 for (let r2 = r1; r2 < ROWS; r2++) {
@@ -846,23 +1372,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         let foundType = null;
                         let isPossible = true;
 
-                        // 현재 만들어진 직사각형 영역(r1~r2, c1~c2) 안의 아이콘들을 스캔
                         for (let r = r1; r <= r2; r++) {
                             for (let c = c1; c <= c2; c++) {
                                 const cellType = board[r][c].type;
                                 if (cellType !== 'empty') {
                                     count++;
-                                    // 최대 개수(4개)를 초과하면 불가능한 직사각형
                                     if (count > 4) {
                                         isPossible = false;
                                         break;
                                     }
-                                    // 성격이 섞이는지 검사 (공명은 자유)
                                     if (cellType !== TYPE_RESONANCE) {
                                         if (!foundType) {
                                             foundType = cellType;
                                         } else if (foundType !== cellType) {
-                                            isPossible = false; // 다른 성격이 섞임
+                                            isPossible = false;
                                             break;
                                         }
                                     }
@@ -871,7 +1394,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             if (!isPossible) break;
                         }
 
-                        // 다른 성격이 하나도 안 섞이고, 개수가 2개~4개면 매칭 가능한 조합이 남아있다는 뜻!
                         if (isPossible && count >= 2 && count <= 4) {
                             return true;
                         }
@@ -880,8 +1402,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
-        
-        // 가능한 모든 직사각형을 스캔했는데도 터뜨릴 수 있는 경우가 1개도 없다면 완전한 데드락!
         return false;
     }
 
@@ -927,6 +1447,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => scoreVal.style.transform = 'scale(1)', 100);
     }
 
+    // 콤보 팝업 효과
     function updateComboUI() {
         comboVal.textContent = combo;
         comboVal.style.transform = 'scale(1.2)';
@@ -1001,6 +1522,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         createExplosionParticles(cell);
         
+        // 공명 아이템 사용 업적 체크 연동
+        incrementResonanceUsage();
+        
         resonanceCount--;
         isResonanceMode = false;
         resonanceBtn.classList.remove('active');
@@ -1019,16 +1543,16 @@ document.addEventListener('DOMContentLoaded', () => {
     pauseBtn.addEventListener('click', () => {
         if (!gameActive || isPaused || isResetting) return;
         isPaused = true;
+        
+        initVolumeSettings(); // 최신 세팅값 인게임 일시정지 슬라이더 싱크
         soundManager.playPause();
         soundManager.pauseBgm();
         
-        // 일시정지 돌입 즉시 타이머 인터벌 클리어
         if (gameIntervalId) {
             clearInterval(gameIntervalId);
             gameIntervalId = null;
         }
         
-        // 보드판 흔들림 및 하이라이트 클래스 소멸시켜 CPU/GPU 점유율 절감
         for (let r = 0; r < ROWS; r++) {
             if (!board[r]) continue;
             for (let c = 0; c < COLS; c++) {
@@ -1052,7 +1576,6 @@ document.addEventListener('DOMContentLoaded', () => {
         appContainer.classList.remove('paused-active');
         pauseModal.classList.remove('active');
         
-        // 타이머 루프 재개
         lastTickTime = performance.now();
         if (gameIntervalId) clearInterval(gameIntervalId);
         gameIntervalId = setInterval(updateGameTicks, 50);
@@ -1068,10 +1591,7 @@ document.addEventListener('DOMContentLoaded', () => {
     exitBtn.addEventListener('click', () => {
         pauseModal.classList.remove('active');
         appContainer.classList.remove('paused-active');
-        startModalTitle.textContent = '트릭컬 성격 공명 링크';
-        startModalDesc.innerHTML = '아이콘을 마우스로 드래그하여 사각형으로 감싸 터뜨리세요!<br>사각형 안에 같은 성격이 2~4개 있어야 합니다.';
-        startGameBtn.textContent = '게임 시작';
-        startModal.classList.add('active');
+        appContainer.classList.remove('modal-active');
         
         gameActive = false;
         isPaused = false;
@@ -1083,7 +1603,6 @@ document.addEventListener('DOMContentLoaded', () => {
         
         soundManager.stopBgm();
         
-        // 보드판의 모든 하이라이트 및 공명 애니메이션 완벽 중단
         for (let r = 0; r < ROWS; r++) {
             if (!board[r]) continue;
             for (let c = 0; c < COLS; c++) {
@@ -1093,5 +1612,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
         }
+
+        // 로비로 퇴장
+        showScreen(lobbyScreen);
+        updateRewardIcons();
     });
 });
+

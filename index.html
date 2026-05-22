@@ -17,80 +17,219 @@
     </div>
 
     <div id="app-container">
-        <!-- 상단 헤더 영역 -->
-        <header id="game-header">
-            <h1 id="game-title">성격 공명 링크 미니게임!</h1>
-            <div id="timer-container">
-                <span id="timer-icon">⏰</span>
-                <span id="timer-label">남은 시간</span>
-                <div id="timer-bar-bg">
-                    <div id="timer-bar-fill"></div>
+        <!-- 1. 메인 로비 화면 -->
+        <div id="lobby-screen" class="screen active">
+            <!-- 타이틀 및 베타 배지, 볼륨 버튼 -->
+            <div id="lobby-header">
+                <div id="lobby-title-container">
+                    <span id="lobby-title">성격 공명 링크</span>
+                    <span id="beta-badge">BETA</span>
+                </div>
+                <!-- 볼륨 조정 버튼 -->
+                <button id="volume-btn" aria-label="볼륨 조절">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" fill="currentColor"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 메인 콘텐츠 영역 -->
+            <div id="lobby-main">
+                <!-- 좌측 영역: 일일 플레이 보상 -->
+                <div id="lobby-left">
+                    <div id="reward-box">
+                        <div id="reward-list">
+                            <button class="reward-item" id="reward-1" data-step="1" disabled>
+                                <img src="assets/mocaron.png" alt="모카롱" class="macaron-img">
+                                <span class="reward-badge">1</span>
+                            </button>
+                            <button class="reward-item" id="reward-2" data-step="2" disabled>
+                                <img src="assets/mocaron.png" alt="모카롱" class="macaron-img">
+                                <span class="reward-badge">2</span>
+                            </button>
+                            <button class="reward-item" id="reward-3" data-step="3" disabled>
+                                <img src="assets/mocaron.png" alt="모카롱" class="macaron-img">
+                                <span class="reward-badge">3</span>
+                            </button>
+                        </div>
+                        <div id="reward-title">매일 3회 플레이 보상</div>
+                    </div>
+                </div>
+
+                <!-- 중앙 영역: 오각형 성격 판넬 -->
+                <div id="lobby-center">
+                    <div id="pentagon-wrapper">
+                        <!-- 프리미엄 오각형 백터 판넬 -->
+                        <svg viewBox="0 0 320 320" class="pentagon-svg">
+                            <defs>
+                                <!-- 판넬 내부 채우기용 라벤더-로즈 파스텔 그라디언트 -->
+                                <linearGradient id="panel-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#FFF5F8" stop-opacity="0.88" />
+                                    <stop offset="50%" stop-color="#EFF3FF" stop-opacity="0.92" />
+                                    <stop offset="100%" stop-color="#EADFFF" stop-opacity="0.88" />
+                                </linearGradient>
+                                <!-- 테두리용 핑크-블루-바이올렛 오로라 그라디언트 -->
+                                <linearGradient id="border-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#FFA2C1" />
+                                    <stop offset="50%" stop-color="#9CBFFF" />
+                                    <stop offset="100%" stop-color="#CEAFFF" />
+                                </linearGradient>
+                                <!-- 네온 글로우 필터 -->
+                                <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+                                    <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur1" />
+                                    <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur2" />
+                                    <feMerge>
+                                        <feMergeNode in="blur1" />
+                                        <feMergeNode in="blur2" />
+                                        <feMergeNode in="SourceGraphic" />
+                                    </feMerge>
+                                </filter>
+                            </defs>
+                            <polygon points="160,20 297.9,120.2 245.2,282.3 74.8,282.3 22.1,120.2" 
+                                     fill="url(#panel-grad)" 
+                                     stroke="url(#border-grad)" 
+                                     stroke-width="5"
+                                     stroke-linejoin="round"
+                                     filter="url(#neon-glow)" />
+                        </svg>
+                        
+                        <div id="pentagon-panel">
+                            <!-- 각 꼭짓점 성격별 둥근 펄 트레이 백그라운드와 아이콘 -->
+                            <div class="pentagon-tray madness">
+                                <img src="assets/madness.png" alt="광기" class="pentagon-icon">
+                            </div>
+                            <div class="pentagon-tray pure">
+                                <img src="assets/pure.png" alt="순수" class="pentagon-icon">
+                            </div>
+                            <div class="pentagon-tray calm">
+                                <img src="assets/calm.png" alt="냉정" class="pentagon-icon">
+                            </div>
+                            <div class="pentagon-tray lively">
+                                <img src="assets/lively.png" alt="활발" class="pentagon-icon">
+                            </div>
+                            <div class="pentagon-tray gloom">
+                                <img src="assets/gloom.png" alt="우울" class="pentagon-icon">
+                            </div>
+                            
+                            <!-- 정중앙 공명 트레이와 아이콘 -->
+                            <div class="resonance-tray">
+                                <img src="assets/resonance.png" alt="공명" class="pentagon-icon resonance">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 우측 영역: 업적 및 랭킹 버튼 -->
+                <div id="lobby-right">
+                    <button id="achieve-btn" class="lobby-menu-btn">
+                        <div class="menu-icon">🏆</div>
+                        <span class="menu-text">업적</span>
+                    </button>
+                    <button id="rank-btn" class="lobby-menu-btn">
+                        <div class="menu-icon">📋</div>
+                        <span class="menu-text">점수 랭크</span>
+                    </button>
                 </div>
             </div>
-            <button id="pause-btn" aria-label="일시정지">
-                <svg viewBox="0 0 24 24" width="24" height="24">
-                    <rect x="5" y="4" width="5" height="16" rx="1.5" fill="currentColor"></rect>
-                    <rect x="14" y="4" width="5" height="16" rx="1.5" fill="currentColor"></rect>
-                </svg>
-            </button>
-        </header>
 
-        <!-- 메인 게임 영역 (사이드바 + 보드) -->
-        <main id="game-main">
-            <!-- 좌측 사이드바 (정보창) -->
-            <section id="sidebar">
-                <!-- 획득 점수 박스 -->
-                <div class="info-box" id="score-box">
-                    <h2 class="info-title">획득 점수</h2>
-                    <div class="info-value" id="score-val">0</div>
+            <!-- 하단 푸터 영역 -->
+            <div id="lobby-footer">
+                <!-- 캐릭터 & 말풍선 -->
+                <div id="uros-container">
+                    <div id="uros-speech">
+                        <p>능력을 발휘해<br>보겠어요.</p>
+                        <div class="speech-tail"></div>
+                    </div>
+                    <img src="assets/uros.png" alt="우로스" id="uros-character">
                 </div>
 
-                <!-- 콤보 박스 -->
-                <div class="info-box" id="combo-box">
-                    <h2 class="info-title">Combo!</h2>
-                    <div class="info-value" id="combo-val">0</div>
-                    <!-- 콤보 유지 시간 타이머 바 -->
-                    <div id="combo-timer-bar-bg">
-                        <div id="combo-timer-bar-fill"></div>
+                <!-- 메인 버튼군 -->
+                <div id="lobby-buttons">
+                    <button id="lobby-tutorial-btn" class="lobby-btn">튜토리얼</button>
+                    <button id="play-btn" class="lobby-btn btn-play">Play!</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 게임 플레이 화면 영역 -->
+        <div id="game-screen" class="screen">
+            <!-- 상단 헤더 영역 -->
+            <header id="game-header">
+                <h1 id="game-title">성격 공명 링크 미니게임!</h1>
+                <div id="timer-container">
+                    <span id="timer-icon">⏰</span>
+                    <span id="timer-label">남은 시간</span>
+                    <div id="timer-bar-bg">
+                        <div id="timer-bar-fill"></div>
                     </div>
                 </div>
+                <button id="pause-btn" aria-label="일시정지">
+                    <svg viewBox="0 0 24 24" width="24" height="24">
+                        <rect x="5" y="4" width="5" height="16" rx="1.5" fill="currentColor"></rect>
+                        <rect x="14" y="4" width="5" height="16" rx="1.5" fill="currentColor"></rect>
+                    </svg>
+                </button>
+            </header>
 
-                <!-- 공명 아이템 버튼 -->
-                <div id="item-area">
-                    <button id="resonance-btn" class="disabled" disabled aria-label="공명 아이템 사용">
-                        <div class="item-img-container">
-                            <img src="assets/resonance.png" alt="공명 물약" id="resonance-img">
-                            <span class="click-badge">Click!</span>
+            <!-- 메인 게임 영역 (사이드바 + 보드) -->
+            <main id="game-main">
+                <!-- 좌측 사이드바 (정보창) -->
+                <section id="sidebar">
+                    <!-- 획득 점수 박스 -->
+                    <div class="info-box" id="score-box">
+                        <h2 class="info-title">획득 점수</h2>
+                        <div class="info-value" id="score-val">0</div>
+                    </div>
+
+                    <!-- 콤보 박스 -->
+                    <div class="info-box" id="combo-box">
+                        <h2 class="info-title">Combo!</h2>
+                        <div class="info-value" id="combo-val">0</div>
+                        <!-- 콤보 유지 시간 타이머 바 -->
+                        <div id="combo-timer-bar-bg">
+                            <div id="combo-timer-bar-fill"></div>
                         </div>
-                    </button>
-                    <div id="resonance-count">X0</div>
-                </div>
-            </section>
-
-            <!-- 중앙 게임 보드판 -->
-            <section id="board-container">
-                <div id="game-board" class="board-grid">
-                    <!-- Javascript가 여기에 10x15 그리드 셀들을 생성합니다 -->
-                </div>
-                <!-- 직사각형 면적 선택 박스 -->
-                <div id="selection-box"></div>
-                
-                <!-- 새로운 보드판 로딩 메시지 -->
-                <div id="board-loading-overlay">
-                    <div class="loading-content">
-                        <div class="spinner"></div>
-                        <p>새로운 보드판 로딩 중...</p>
                     </div>
-                </div>
-            </section>
-        </main>
 
+                    <!-- 공명 아이템 버튼 -->
+                    <div id="item-area">
+                        <button id="resonance-btn" class="disabled" disabled aria-label="공명 아이템 사용">
+                            <div class="item-img-container">
+                                <img src="assets/resonance.png" alt="공명 물약" id="resonance-img">
+                                <span class="click-badge">Click!</span>
+                            </div>
+                        </button>
+                        <div id="resonance-count">X0</div>
+                    </div>
+                </section>
+
+                <!-- 중앙 게임 보드판 -->
+                <section id="board-container">
+                    <div id="game-board" class="board-grid">
+                        <!-- Javascript가 여기에 10x15 그리드 셀들을 생성합니다 -->
+                    </div>
+                    <!-- 직사각형 면적 선택 박스 -->
+                    <div id="selection-box"></div>
+                    
+                    <!-- 새로운 보드판 로딩 메시지 -->
+                    <div id="board-loading-overlay">
+                        <div class="loading-content">
+                            <div class="spinner"></div>
+                            <p>새로운 보드판 로딩 중...</p>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+        <!-- 3. 모달 팝업창 레이어 -->
+        
         <!-- 일시정지 모달 팝업 -->
         <div id="pause-modal" class="modal-overlay">
             <div class="modal-content">
                 <h2 class="modal-title">일시 정지 중</h2>
                 
-                <!-- 사운드 볼륨 조절 영역 -->
+                <!-- 사운드 볼륨 조절 영역 복구 -->
                 <div id="volume-controls">
                     <div class="volume-row">
                         <span class="volume-label">🎵 배경음악</span>
@@ -112,13 +251,104 @@
             </div>
         </div>
 
-        <!-- 게임 시작 대기 및 결과 팝업 -->
-        <div id="start-modal" class="modal-overlay active">
+        <!-- 게임 결과 및 시작 팝업 -->
+        <div id="start-modal" class="modal-overlay">
             <div class="modal-content">
-                <h2 class="modal-title" id="start-modal-title">트릭컬 성격 공명 링크</h2>
-                <p class="modal-desc" id="start-modal-desc">같은 성격 아이콘을 상하좌우 드래그하여 연결해 터뜨리세요!<br>2~4개까지 연결 가능하며, 빈 자리를 활용해 길을 내세요.</p>
+                <h2 class="modal-title" id="start-modal-title">시간 초과!</h2>
+                <p class="modal-desc" id="start-modal-desc">게임 결과가 여기에 표시됩니다.</p>
                 <div class="modal-buttons">
-                    <button id="start-game-btn" class="modal-btn btn-primary">게임 시작</button>
+                    <button id="start-game-btn" class="modal-btn btn-primary">다시 도전하기</button>
+                    <button id="lobby-back-btn" class="modal-btn btn-secondary">로비로 가기</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 신설: 업적 모달 팝업 -->
+        <div id="achieve-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h2 class="modal-title">명예의 업적</h2>
+                <div id="achieve-list">
+                    <!-- JS가 동적으로 업적 항목을 생성하여 주입합니다 -->
+                </div>
+                <div class="modal-buttons" style="margin-top: 20px;">
+                    <button id="achieve-close-btn" class="modal-btn btn-primary">확인</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 신설: 점수 랭킹 모달 팝업 -->
+        <div id="rank-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h2 class="modal-title">최고 점수 랭킹</h2>
+                <div id="rank-list">
+                    <!-- JS가 동적으로 랭킹 리스트를 생성하여 주입합니다 -->
+                </div>
+                <div class="modal-buttons" style="margin-top: 20px;">
+                    <button id="rank-close-btn" class="modal-btn btn-primary">확인</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 신설: 튜토리얼 모달 팝업 -->
+        <div id="tutorial-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h2 class="modal-title">튜토리얼</h2>
+                <div class="tutorial-body">
+                    <p class="tutorial-desc">같은 성격 아이콘을 드래그하여 직사각형 영역으로 연결하여 터뜨리세요!<br>영역 내에 같은 성격이 2~4개 있어야 터집니다.</p>
+                    <div class="tutorial-step">
+                        <div class="step-badge">1</div>
+                        <p>마우스 드래그 또는 모바일 터치로 직사각형 조작 영역을 지정합니다.</p>
+                    </div>
+                    <div class="tutorial-step">
+                        <div class="step-badge">2</div>
+                        <p>선택된 직사각형 내에 오직 같은 성격의 아이콘만 포함되어야 터집니다 (공명 아이콘은 예외).</p>
+                    </div>
+                    <div class="tutorial-step">
+                        <div class="step-badge">3</div>
+                        <p>공명 아이템을 클릭하고 성격 셀을 누르면 만능(공명) 상태로 변환시켜 매칭을 돕습니다.</p>
+                    </div>
+                </div>
+                <div class="modal-buttons" style="margin-top: 20px;">
+                    <button id="tutorial-close-btn" class="modal-btn btn-primary">확인</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 신설: 보상 획득 모달 팝업 -->
+        <div id="reward-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h2 class="modal-title">🍬 보상 획득 완료! 🍬</h2>
+                <div class="reward-content">
+                    <img src="assets/mocaron.png" alt="마카롱" class="reward-pop-img">
+                    <p class="reward-desc" id="reward-desc-txt">달콤한 일일 플레이 마카롱 보상을 수령했습니다!<br>우로스의 기운이 솟아납니다!</p>
+                </div>
+                <div class="modal-buttons" style="margin-top: 20px;">
+                    <button id="reward-close-btn" class="modal-btn btn-primary">기뻐하기</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 신설: 볼륨 조절 모달 팝업 -->
+        <div id="volume-modal" class="modal-overlay">
+            <div class="modal-content">
+                <h2 class="modal-title">볼륨 설정</h2>
+                
+                <div id="lobby-volume-controls">
+                    <div class="volume-row">
+                        <span class="volume-label">🎵 배경음악</span>
+                        <input type="range" id="lobby-bgm-volume" class="volume-slider" min="0" max="100" value="30">
+                        <span class="volume-value" id="lobby-bgm-volume-val">30</span>
+                    </div>
+                    <div class="volume-row">
+                        <span class="volume-label">🔊 효과음</span>
+                        <input type="range" id="lobby-sfx-volume" class="volume-slider" min="0" max="100" value="70">
+                        <span class="volume-value" id="lobby-sfx-volume-val">70</span>
+                    </div>
+                </div>
+                
+                <div class="modal-buttons" style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+                    <button id="data-reset-btn" class="modal-btn" style="background: #ffe3e8; border: 2.5px solid #ff8fa3; color: #ff4d6d; cursor: pointer; box-shadow: 0 4px 0 #ff8fa3; border-radius: 12px; font-weight: bold; font-family: var(--font-family) !important;">기록 초기화</button>
+                    <button id="volume-close-btn" class="modal-btn btn-primary">확인</button>
                 </div>
             </div>
         </div>

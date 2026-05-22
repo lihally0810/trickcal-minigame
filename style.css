@@ -1180,8 +1180,8 @@ body {
     left: 26px;    /* 우로스 캐릭터가 있는 왼쪽으로 부드럽게 휘어져 뻗는 가로 시작점 */
     width: 40px;
     height: 30px;
-    /* 말풍선 사각형 윤곽선(베이지색 선)을 훼손 없이 보존하면서 그 흐름에 찰싹 맞물리는 정밀 SVG 곡선 꼬리 */
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='30' viewBox='0 0 40 30'><path d='M 18 0 L 34 0 C 30 10 14 24 2 26 C 8 22 20 10 18 0 Z' fill='%23ffffff'/><path d='M 34 0 C 30 10 14 24 2 26 C 8 22 20 10 18 0' fill='none' stroke='%23ebdcb9' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+    /* 말풍선 사각형 윤곽선(베이지색 선)을 훼손 없이 보존하면서 그 흐름에 찰싹 맞물리는 정밀 SVG 곡선 꼬리 (브라우저 호환성을 위해 URL 인코딩 적용) */
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20width%3D%2740%27%20height%3D%2730%27%20viewBox%3D%270%200%2040%2030%27%3E%3Cpath%20d%3D%27M%2018%200%20L%2034%200%20C%2030%2010%2014%2024%202%2026%20C%208%2022%2020%2010%2018%200%20Z%27%20fill%3D%27%23ffffff%27%2F%3E%3Cpath%20d%3D%27M%2034%200%20C%2030%2010%2014%2024%202%2026%20C%208%2022%2020%2010%2018%200%27%20fill%3D%27none%27%20stroke%3D%27%23ebdcb9%27%20stroke-width%3D%273%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%2F%3E%3C%2Fsvg%3E");
     background-size: contain;
     background-repeat: no-repeat;
     filter: drop-shadow(-3px 4px 2px rgba(90, 75, 65, 0.12));

@@ -1730,6 +1730,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         resonanceCount = 0;
 
+        fishingCount = 0;
+
         lastAwardedComboTier = 0;
 
         timeRemainingMs = TOTAL_TIME_MS;
